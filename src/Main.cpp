@@ -1,5 +1,6 @@
 #include "GameEngine.h"
 
+<<<<<<< HEAD
 
 
 typedef void (*FuncPointer)(int, int);  
@@ -27,10 +28,13 @@ class System
     private:
         int std::unordered_map<char, void(T::*memFunC)()>;
 };
+=======
+#define FPS 60
+>>>>>>> b737e87a8fec8679db2837ffc5edf252525c8ed1
 
 int main(int argv, char **argc)
 {
-    GameEngine gameEngine(600, 400, 60);
+    GameEngine gameEngine(600, 400, FPS);
 
     FuncPointer fp1 = Add;
     fp1(2,3);

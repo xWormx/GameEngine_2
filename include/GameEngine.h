@@ -9,6 +9,8 @@
 #include <string>
 #include <map>
 
+#include "Level.h"
+
 class GameEngine
 {
     public:
@@ -19,6 +21,8 @@ class GameEngine
         int windowWidth, windowHeight;
         int FramesPerSecond;
 
+        Level* currentLevel;
+        
         bool running;
         SDL_Window* window;
         SDL_Renderer* renderer;
