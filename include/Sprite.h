@@ -10,7 +10,7 @@ class Sprite
     virtual void OnKeyDown() {}
     virtual void OnKeyUp() {}
     virtual void OnMouseUp() {}
-    virtual void OnMouseUp() {}
+    virtual void OnMouseDown() {}
     virtual ~Sprite();
 
     protected:

@@ -1,7 +1,5 @@
 #include "GameEngine.h"
 
-<<<<<<< HEAD
-
 
 typedef void (*FuncPointer)(int, int);  
 
@@ -19,18 +17,23 @@ template <typename T>
 class System
 {
     public:
-        System(int data) : sysData(data){}
+        System(){}
         
         void RegisterKeyCallBack(char key, T* object, void(T::*memFunc)())
         {
-            std::cout << "op";
+            keyCallbacks[key].emplace_back(object, memFunc);
+
+        }
+
+        void ExecureCallBacks(char key)
+        {
         }
     private:
-        int std::unordered_map<char, void(T::*memFunC)()>;
+        typedef void (T::*MemFuncPointer)();
+        std::unordered_map<char, std::vector<std::pair<T*, MemFuncPointer>>> keyCallbacks;
 };
-=======
+
 #define FPS 60
->>>>>>> b737e87a8fec8679db2837ffc5edf252525c8ed1
 
 int main(int argv, char **argc)
 {
