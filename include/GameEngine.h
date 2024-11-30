@@ -10,7 +10,6 @@
 #include <vector>
 #include <unordered_map>
 #include "Vec2i.h"
-
 #include "Level.h"
 
 class GameEngine
