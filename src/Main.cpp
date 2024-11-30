@@ -1,8 +1,6 @@
 #include "GameEngine.h"
 
 
-typedef void (*FuncPointer)(int, int);  
-
 void Add(int a, int b)
 {
     std::cout << a << " + " << b << " = " << a+b << "\n";
@@ -13,24 +11,61 @@ void Sub(int a, int b)
     std::cout << a << " - " << b << " = " << a-b << "\n";
 }
 
-template <typename T> 
+void Shoot()
+{
+    std::cout << "SHOOT\n";
+}
+
+void Move()
+{
+    std::cout << "Move\n";
+}
+
+
+typedef void (*FpVoid)();
+typedef void (*FuncPointer)(int, int);
+
 class System
 {
     public:
         System(){}
         
-        void RegisterKeyCallBack(char key, T* object, void(T::*memFunc)())
+        void RegisterKeyCallback(char key, FpVoid callback)
         {
-            keyCallbacks[key].emplace_back(object, memFunc);
-
+            keyCallbacks[key].emplace_back(callback);
         }
 
-        void ExecureCallBacks(char key)
+        void ExecuteCallBacksForKey(char key)
         {
+            for(FpVoid callback : keyCallbacks.at(key))
+            {
+                std::cout << key << " was pressed: ";
+                callback();
+            }
         }
+
     private:
-        typedef void (T::*MemFuncPointer)();
-        std::unordered_map<char, std::vector<std::pair<T*, MemFuncPointer>>> keyCallbacks;
+        std::unordered_map<char, std::vector<FpVoid>> keyCallbacks;
+};
+
+class Player
+{
+    public:
+        static Player* GetInstance(Vec2i p)
+        {
+            return new Player(p);
+        }
+        void Move(Vec2i movement)
+        {
+            pos += movement;
+        }
+        
+    protected:
+        Player(Vec2i p) : pos(p){}
+
+    private:
+        Vec2i pos;
+
 };
 
 #define FPS 60
@@ -39,11 +74,18 @@ int main(int argv, char **argc)
 {
     GameEngine gameEngine(600, 400, FPS);
 
-    FuncPointer fp1 = Add;
-    fp1(2,3);
-    FuncPointer fp2 = Sub;
-    fp2(4,5);
+    System sys = {};
 
+    //Player* player = Player::GetInstance({2, 3});
+
+    sys.RegisterKeyCallback('c', Shoot);
+    sys.RegisterKeyCallback('c', Move);
+    sys.RegisterKeyCallback('a', Shoot);
+
+
+    sys.ExecuteCallBacksForKey('c');
+    sys.ExecuteCallBacksForKey('a');
+ 
     gameEngine.Run();
 
     return 0;
