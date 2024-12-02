@@ -1,11 +1,78 @@
 #include "GameEngine.h"
 
-GameEngine::GameEngine(int winWidth, int winHeight, int fps) : windowWidth(winWidth), windowHeight(winHeight), FramesPerSecond(fps)
+extern GameEngine gameEngine(600, 400);
+
+GameEngine::GameEngine(int winWidth, int winHeight) : windowWidth(600), windowHeight(400), framesPerSecond(60)
 {
     InitializeSDL();
     InitializeIMG();
     InitializeTTF();
     CreateWindowAndRenderer(windowWidth, windowHeight);
+}
+
+void GameEngine::Run()
+{   
+    running = true;
+    /* Handle framrate */
+    /* start text input */
+    while(running)
+    {
+        /* if(loadLevelRequested)
+            SetCurrentLevel();
+         */    
+        
+        HandleEvents();
+        
+        /* Sortera sprites */
+
+        /* currentLevel->Update(*this); */
+
+        /* DrawLevel(); */
+
+        SDL_RenderClear(renderer);
+        SDL_SetRenderDrawColor(renderer, 0xff, 0xaa, 0x11, 0xff);
+        SDL_RenderPresent(renderer);
+
+        /* Delay */
+    }
+
+    /* Stop textinput */
+}
+
+void GameEngine::HandleEvents()
+{
+    SDL_Event e;
+    if(SDL_PollEvent(&e))
+    {
+        switch(e.type)
+        {
+            case SDL_QUIT:
+            {
+                running = false;
+            } break;
+            case SDL_KEYDOWN:
+            {
+                if(e.key.keysym.sym == SDLK_ESCAPE)
+                    running = false;
+                HandleKeyCallbacks(e.key.keysym.sym);
+            } break;
+        }
+    }
+}
+
+void GameEngine::HandleKeyCallbacks(const SDL_Keycode& key)
+{
+    if(keyCallbacks.count(key))
+    {
+        for(auto callback : keyCallbacks[key])
+            callback();
+    }
+    
+    if(memberKeyCallbacks.count(key))
+    {
+        for(auto callback : memberKeyCallbacks[key])
+            callback();
+    }
 }
 
 void GameEngine::InitializeSDL()
@@ -51,27 +118,3 @@ void GameEngine::CreateWindowAndRenderer(int width, int height)
         
 }
 
-void GameEngine::Run()
-{   
-    running = true;
-    while(running)
-    {
-        SDL_Event e;
-        if(SDL_PollEvent(&e))
-        {
-            switch(e.type)
-            {
-                case SDL_QUIT:
-                {
-                    running = false;
-                } break;
-
-                case SDL_KEYDOWN:
-                {
-                    if(e.key.keysym.sym == SDLK_ESCAPE)
-                        running = false;
-                } break;
-            }
-        }
-    }
-}
