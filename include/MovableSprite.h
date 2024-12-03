@@ -7,7 +7,7 @@ class MovableSprite : public Sprite
 {
     public:
         static MovableSprite* GetInstance(Vec2i p, Vec2i sz, std::string srcImage);
-        void Draw() const;
+        //void Draw() const;
         void Tick();
         void Print() { std::cout << "FROM MOV SPRITE\n"; }
         ~MovableSprite(){}

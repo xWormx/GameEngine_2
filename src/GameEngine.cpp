@@ -17,20 +17,21 @@ void GameEngine::Run()
     /* start text input */
     while(running)
     {
-        /* if(loadLevelRequested)
+        if(loadLevelRequested)
             SetCurrentLevel();
-         */    
+             
         
         HandleEvents();
         
         /* Sortera sprites */
 
-        /* currentLevel->Update(*this); */
-
-        /* DrawLevel(); */
+        currentLevel->Update(*this);
 
         SDL_RenderClear(renderer);
         SDL_SetRenderDrawColor(renderer, 0xff, 0xaa, 0x11, 0xff);
+        
+        DrawLevel(); 
+       
         SDL_RenderPresent(renderer);
 
         /* Delay */
@@ -72,6 +73,54 @@ void GameEngine::HandleKeyCallbacks(const SDL_Keycode& key)
     {
         for(auto callback : memberKeyCallbacks[key])
             callback();
+    }
+}
+
+void GameEngine::AddLevel(Level* level)
+{
+    if(!level)
+        throw std::runtime_error("Level was not valid");
+    
+    for(Level* l : levels)
+    {
+        if(l->GetLevelIndex() == level->GetLevelIndex())
+        {
+            std::string errMsg = "There's already a level with levelIndex" + level->GetLevelIndex();
+            throw std::runtime_error(errMsg);
+        }  
+    }
+
+    levels.push_back(level);
+
+    if(levels.size() == 1)
+    {
+        LoadLevel(level->GetLevelIndex());
+        SetCurrentLevel();
+    }
+
+
+}
+void GameEngine::DrawLevel() const
+{
+    for(Sprite* s : currentLevel->GetSprites())
+    {
+        s->Draw();
+    }    
+}
+
+void GameEngine::LoadLevel(unsigned int levelIndex)
+{
+    loadLevelRequested = true;
+    levelIndexToLoad = levelIndex;
+
+}
+
+void GameEngine::SetCurrentLevel()
+{
+    for(Level* l : levels)
+    {
+        if(l->GetLevelIndex() == levelIndexToLoad)
+            currentLevel = l;
     }
 }
 

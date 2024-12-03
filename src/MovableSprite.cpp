@@ -10,11 +10,11 @@ MovableSprite::MovableSprite(Vec2i p, Vec2i sz, std::string srcImage) : Sprite(p
 
 }
 
-void MovableSprite::Draw() const
+/* void MovableSprite::Draw() const
 {
-
+    //SDL_RenderCopy(gameEngine.GetRenderer(), GetTexture(), GetSrcRect(), GetDestRect());
 }
-
+ */
 void MovableSprite::Tick()
 {
 

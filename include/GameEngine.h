@@ -37,13 +37,21 @@ class GameEngine
             memberKeyCallbacks[key].push_back(wrapper);
         }
 
+        void AddLevel(Level* level);
+        void DrawLevel() const;
+        void LoadLevel(unsigned int levelIndex);
+        void SetCurrentLevel();
+
         SDL_Renderer* GetRenderer() {return renderer;}
     private:
         int windowWidth, windowHeight;
         int framesPerSecond;
 
+        bool loadLevelRequested;
+        unsigned int levelIndexToLoad;
         Level* currentLevel;
-        
+        std::vector<Level*> levels;
+
         bool running;
         SDL_Window* window;
         SDL_Renderer* renderer;

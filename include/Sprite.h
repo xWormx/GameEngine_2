@@ -20,6 +20,7 @@ class Sprite
         virtual void OnMouseDown() {}
         virtual ~Sprite();
 
+       // void SDL_Texture* GetTexture() { return texture; }
     protected:
         Sprite(Vec2i pos, Vec2i size, std::string srcImage);
 
