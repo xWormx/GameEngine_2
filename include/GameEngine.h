@@ -14,6 +14,7 @@
 #include "Level.h"
 
 class Level;
+class Sprite;
 
 class GameEngine
 {
@@ -43,6 +44,7 @@ class GameEngine
         void SetCurrentLevel();
 
         SDL_Renderer* GetRenderer() {return renderer;}
+        TTF_Font* GetFont()         {return font;}
     private:
         int windowWidth, windowHeight;
         int framesPerSecond;
@@ -59,14 +61,16 @@ class GameEngine
         std::unordered_map<SDL_Keycode, std::vector<void(*)()>> keyCallbacks;
         std::unordered_map<SDL_Keycode, std::vector<std::function<void()>>> memberKeyCallbacks;
 
+        TTF_Font* font;
         void InitializeSDL();
         void InitializeIMG();
         void InitializeTTF();
         void CreateWindowAndRenderer(int width, int height);
         void HandleEvents();
         void HandleKeyCallbacks(const SDL_Keycode& key);
-
-
+        void HandleCollisions();
+        bool CheckCollision(Sprite* s, Sprite* other);
+        void ResolveCollision(Sprite* s, Sprite* other);
 };
 
 extern GameEngine gameEngine;

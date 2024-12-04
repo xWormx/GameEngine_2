@@ -26,7 +26,8 @@ void GameEngine::Run()
         /* Sortera sprites */
 
         currentLevel->Update(*this);
-        
+        HandleCollisions();
+
         SDL_RenderClear(renderer);
         SDL_SetRenderDrawColor(renderer, 0xff, 0xaa, 0x11, 0xff);
         
@@ -55,6 +56,9 @@ void GameEngine::HandleEvents()
             {
                 if(e.key.keysym.sym == SDLK_ESCAPE)
                     running = false;
+
+                for(Sprite* s : currentLevel->GetSprites())
+                    s->OnKeyDown();
                 HandleKeyCallbacks(e.key.keysym.sym);
             } break;
         }
@@ -74,6 +78,74 @@ void GameEngine::HandleKeyCallbacks(const SDL_Keycode& key)
         for(auto callback : memberKeyCallbacks[key])
             callback();
     }
+}
+
+void GameEngine::HandleCollisions()
+{
+    for(Sprite* s : currentLevel->GetColliderSprites())
+    {
+        for(Sprite* other : currentLevel->GetColliderSprites())
+        if(!s->GetCollider2D().IsStatic() && !other->GetCollider2D().IsStatic())
+        {
+            if(s != other)
+            {
+                if(CheckCollision(s, other))
+                {
+                    std::cout << "COLLISION\n"; 
+                    ResolveCollision(s, other);
+                }
+            }
+            
+                
+        }
+    }
+}
+
+bool GameEngine::CheckCollision(Sprite* s, Sprite* other)
+{
+    SDL_Rect rectA = s->GetCollider2D().GetBounds();
+    SDL_Rect rectB = other->GetCollider2D().GetBounds();
+
+    if((rectA.x + rectA.w) > rectB.x &&
+        rectA.x < (rectB.x + rectB.w))
+    {
+        if(rectA.y + (rectA.h > rectB.y) &&
+            rectA.y < (rectB.y + rectB.h))
+                return true;
+    }
+
+    return false;
+}
+
+void GameEngine::ResolveCollision(Sprite* s, Sprite* other)
+{
+    SDL_Rect sRect = s->GetDestRect();
+    SDL_Rect otherRect = other->GetDestRect();
+
+    int left, right, top, bottom;
+    
+    if(sRect.x < otherRect.x)
+    {
+        right = sRect.x + sRect.w;
+        left = otherRect.x;
+    }
+    else
+    {
+        right = otherRect.x + otherRect.w;
+        left = sRect.x;
+    }
+
+    if(sRect.y < otherRect.y)
+    {
+        top = otherRect.y;
+        bottom = sRect.y + sRect.h;
+    }
+    else
+    {
+        top = sRect.y;
+        bottom = otherRect.y + otherRect.h;
+    }
+
 }
 
 void GameEngine::AddLevel(Level* level)
@@ -140,12 +212,22 @@ void GameEngine::InitializeIMG()
         throw std::runtime_error("InitializeIMG(): Couldn't initialize IMG" + errMsg);
     }
 }
+
 void GameEngine::InitializeTTF()
 {
     if(TTF_Init() < 0)
     {
         std::string errMsg = SDL_GetError();
         throw std::runtime_error("InitializeTTF(): Couldn't initialize TTF" + errMsg);
+    }
+
+    std::string fontFile = constants::gResPath + "\\fonts\\coure.fon";
+    int fontSize = 48;
+    font = TTF_OpenFont(fontFile.c_str(), fontSize);
+    if(!font)
+    {
+        std::string errMsg = SDL_GetError();
+        throw std::runtime_error("InitializeTTF(): Couldn't Open font " + fontFile + ": " + errMsg);
     }
 }
 

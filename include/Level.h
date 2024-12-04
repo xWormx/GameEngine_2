@@ -14,6 +14,7 @@ class Level
         void Update(GameEngine& engine);
 
         const std::vector<Sprite*>& GetSprites() { return sprites; }
+        const std::vector<Sprite*>& GetColliderSprites() { return colliderSprites; }
         const unsigned int GetLevelIndex() { return levelIndex; }
     protected:
         Level(unsigned int lvlIndex);
@@ -23,6 +24,7 @@ class Level
         std::vector<Sprite*> sprites;
         std::vector<Sprite*> added;
         std::vector<Sprite*> removed;
+        std::vector<Sprite*> colliderSprites;
 };
 
 

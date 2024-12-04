@@ -8,6 +8,7 @@
 #include <iostream>
 #include <stdexcept>
 #include "Constants.h"
+#include "Collider2D.h"
 
 class Sprite
 {
@@ -20,13 +21,21 @@ class Sprite
         virtual void OnMouseDown() {}
         virtual ~Sprite();
 
-       // void SDL_Texture* GetTexture() { return texture; }
+        const SDL_Rect& GetSrcRect() { return srcRect; }
+        const SDL_Rect& GetDestRect() { return destRect; }
+        SDL_Texture* GetTexture() {return texture;}
+        Collider2D& GetCollider2D();
+        void InstallCollider2D(SDL_Rect boundsRect, bool bStatic);
+        bool HasCollider2D();
     protected:
+        Sprite() {}
+        Sprite(Vec2i pos, Vec2i size);
         Sprite(Vec2i pos, Vec2i size, std::string srcImage);
 
     private:
         SDL_Rect destRect, srcRect;
-        SDL_Texture* texture;
+        SDL_Texture* texture = nullptr;
+        Collider2D* collider2D = nullptr;
 
 };
 

@@ -19,6 +19,9 @@ void Level::AddSprite(Sprite* s)
             throw std::runtime_error("AddSprite: Sprite already exists!");
     
     added.push_back(s);
+
+    if(s->HasCollider2D())
+        colliderSprites.push_back(s);
 }
 
 void Level::RemoveSprite(Sprite* s)
@@ -63,7 +66,16 @@ void Level::Update(GameEngine& engine)
                 i++;
         }
 
+        for(std::vector<Sprite*>::iterator ci = colliderSprites.begin(); ci != colliderSprites.end();)
+        {
+            if(*ci == s)
+                ci = colliderSprites.erase(ci);
+            else
+                ci++;
+        }
+
         delete s;
     }
+
     removed.clear();
 }
