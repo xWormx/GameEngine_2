@@ -29,8 +29,23 @@ void Level::RemoveSprite(Sprite* s)
 void Level::Update(GameEngine& engine)
 {
     for(Sprite* s : sprites)
+    {
         s->Tick();
-    
+        /* s->UpdateRgbd()
+        {
+            pos = gravity;
+        } */
+    }
+        
+/* 
+    Loop rgbd */
+
+/* 
+    Loop collisions
+    {
+
+    }
+ */
     for(Sprite* s : added)
         sprites.push_back(s);
 

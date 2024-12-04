@@ -3,6 +3,19 @@
 TP = TillämpningsProgramDel
 GP = GenerellProgramDel
 
+* FÖR FYSIK2D:
+    - Implementeraen funktion i sprite som heter typ UpdateRgbd2D(); och gör i Level:
+
+        
+        for(Sprite* s : sprites)
+        {
+            s->Tick();
+            s->UpdateRgbd2D();
+        }
+        
+        // Hantera elasticitet i Collision hanteringen
+
+
 * Göra klart partikel system
     - ta bort och lägga till partiklar baserat på lifeTime
     - Lägga till movement för particles

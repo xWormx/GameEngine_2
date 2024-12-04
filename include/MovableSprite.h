@@ -10,6 +10,7 @@ class MovableSprite : public Sprite
         //void Draw() const;
         void Tick();
         void Print() { std::cout << "FROM MOV SPRITE\n"; }
+        /* void UpdateRgdb(); */
         ~MovableSprite(){}
 
     protected:

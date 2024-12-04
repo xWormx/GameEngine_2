@@ -46,11 +46,15 @@ void RemoveImageFromLevel()
 
 int main(int argv, char **argc)
 {
-    
     MovableSprite* mvSpr = MovableSprite::GetInstance({0, 0}, {100, 100}, "MainMenuBackground.png");
     
-
+    /* mvSpr->InstallCollider2D();
+    mvSpr->InstallRigidbody2D();
+    mvSpr->SetGravity(9.8);
+    mvSpr->SetElasticity(2);
+ */
     level1->AddSprite(mvSpr);
+    
     gameEngine.SetFps(60);
 
     gameEngine.AddLevel(level1);
@@ -58,6 +62,8 @@ int main(int argv, char **argc)
     gameEngine.RegisterKeyCallback('c', AddImageToLevel);
     gameEngine.RegisterKeyCallback('d', RemoveImageFromLevel);
     gameEngine.RegisterKeyCallback('a', mvSpr, &MovableSprite::Print);
+
+
 
     gameEngine.Run();
 

@@ -26,7 +26,7 @@ void GameEngine::Run()
         /* Sortera sprites */
 
         currentLevel->Update(*this);
-
+        
         SDL_RenderClear(renderer);
         SDL_SetRenderDrawColor(renderer, 0xff, 0xaa, 0x11, 0xff);
         
