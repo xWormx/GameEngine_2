@@ -12,6 +12,15 @@ class MovableSprite : public Sprite
         void Print() { std::cout << "FROM MOV SPRITE\n"; }
         const SDL_Rect& GetDestRect() {return movableDestRect; }
         const SDL_Rect& GetSrcRect() {return movableSrcRect; }
+        void Move(Vec2i movement) 
+        { 
+            movableDestRect.x += movement.x;
+            movableDestRect.y += movement.y;
+            if(HasCollider2D())
+            {
+                    
+            } 
+        }
         /* void UpdateRgdb(); */
         ~MovableSprite();
 

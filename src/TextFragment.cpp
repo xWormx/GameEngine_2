@@ -39,7 +39,7 @@ void TextFragment::Tick()
 }
 
 int num = 0;
-void TextFragment::OnKeyDown()
+void TextFragment::OnKeyDown(const SDL_Event& e)
 {
     std::string number = "num = " + std::to_string(num++);
     SetText(number);

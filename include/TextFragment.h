@@ -10,7 +10,7 @@ class TextFragment : public Sprite
         static TextFragment* GetInstance(Vec2i pos, Vec2i sz, std::string txt, SDL_Color col);
         void Tick();
         void Draw() const;
-        void OnKeyDown();
+        void OnKeyDown(const SDL_Event& e);
 
         void SetText(std::string txt);
     protected:

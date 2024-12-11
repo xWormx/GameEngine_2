@@ -58,9 +58,14 @@ void GameEngine::HandleEvents()
                     running = false;
 
                 for(Sprite* s : currentLevel->GetSprites())
-                    s->OnKeyDown();
+                    s->OnKeyDown(e);
                 HandleKeyCallbacks(e.key.keysym.sym);
             } break;
+            case SDL_KEYUP:
+            {
+                for(Sprite* s : currentLevel->GetSprites())
+                    s->OnKeyUp(e);
+            }
         }
     }
 }

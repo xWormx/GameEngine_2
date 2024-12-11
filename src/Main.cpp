@@ -46,17 +46,59 @@ void RemoveImageFromLevel()
     }       
 }
 
+class Player : public MovableSprite
+{
+    public:
+        Player(Vec2i p, Vec2i sz, std::string srcImage) : MovableSprite(p, sz, srcImage)
+        {
+        }
+        void OnKeyDown(const SDL_Event& e)
+        {
+            if(e.key.keysym.sym == SDLK_d)
+                speed.x = 1;
+
+            if(e.key.keysym.sym == SDLK_a)
+                speed.x = -1;
+
+            if(e.key.keysym.sym == SDLK_w)
+                speed.y = -1;
+
+            if(e.key.keysym.sym == SDLK_s)
+                speed.y = 1;
+
+                
+
+        }
+        void OnKeyUp(const SDL_Event& e)
+        {
+            if(e.key.keysym.sym == SDLK_d || e.key.keysym.sym == SDLK_a)
+                speed.x = 0;
+            
+            if(e.key.keysym.sym == SDLK_w || e.key.keysym.sym == SDLK_s)
+                speed.y = 0;
+                
+        }
+
+        void Tick()
+        {
+            Move(speed);
+        }
+
+    private:
+        Vec2i speed = {};
+        
+};
+
 int main(int argv, char **argc)
 {
     MovableSprite* mvSpr = MovableSprite::GetInstance({0, 0}, {64, 64}, "MainMenuBackground.png");
-    
-    /* mvSpr->InstallCollider2D();
-    mvSpr->InstallRigidbody2D();
-    mvSpr->SetGravity(9.8);
-    mvSpr->SetElasticity(2);
- */
-
     TextFragment* text1 = TextFragment::GetInstance({100, 100}, {100, 100}, "YOOOO", {255, 0, 0, 255});
+
+    Player* player = new Player({100,100}, {64, 128}, "PersonIdle_Small.png");
+    player->InstallCollider2D({player->GetDestRect().x, player->GetDestRect().y,
+                                player->GetDestRect().w, player->GetDestRect().h}, false);
+
+    level1->AddSprite(player);
     level1->AddSprite(mvSpr);
     level1->AddSprite(text1);
     
@@ -65,7 +107,7 @@ int main(int argv, char **argc)
     gameEngine.AddLevel(level1);
     gameEngine.RegisterKeyCallback('c', Attack);
     gameEngine.RegisterKeyCallback('c', AddImageToLevel);
-    gameEngine.RegisterKeyCallback('d', RemoveImageFromLevel);
+    gameEngine.RegisterKeyCallback('p', RemoveImageFromLevel);
     gameEngine.RegisterKeyCallback('a', mvSpr, &MovableSprite::Print);
 
 

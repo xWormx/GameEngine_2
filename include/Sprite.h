@@ -15,10 +15,10 @@ class Sprite
     public:
         virtual void Draw() const;
         virtual void Tick() = 0;
-        virtual void OnKeyDown() {}
-        virtual void OnKeyUp() {}
-        virtual void OnMouseUp() {}
-        virtual void OnMouseDown() {}
+        virtual void OnKeyDown(const SDL_Event&) {}
+        virtual void OnKeyUp(const SDL_Event&) {}
+        virtual void OnMouseUp(const SDL_Event&) {}
+        virtual void OnMouseDown(const SDL_Event&) {}
         virtual ~Sprite();
 
         const SDL_Rect& GetSrcRect() { return srcRect; }
