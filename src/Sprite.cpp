@@ -52,7 +52,6 @@ void Sprite::InstallCollider2D(SDL_Rect boundsRect, bool bStatic)
         throw std::runtime_error("Sprite already have a Collider2D installed and can only have one Collider2D instance for now!");    
     
     collider2D = Collider2D::GetInstance(boundsRect, bStatic);
-    
 }
 
 Sprite::~Sprite()

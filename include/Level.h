@@ -5,6 +5,7 @@
 #include "Sprite.h"
 class Sprite;
 class GameEngine;
+
 class Level
 {
     public:

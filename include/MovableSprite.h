@@ -12,24 +12,24 @@ class MovableSprite : public Sprite
         void Print() { std::cout << "FROM MOV SPRITE\n"; }
         const SDL_Rect& GetDestRect() {return movableDestRect; }
         const SDL_Rect& GetSrcRect() {return movableSrcRect; }
-        void Move(Vec2i movement) 
-        { 
-            movableDestRect.x += movement.x;
-            movableDestRect.y += movement.y;
-            if(HasCollider2D())
-            {
-                    
-            } 
-        }
+        void Move(Vec2i& movement); 
+        void SetSpriteRegion(Vec2i p, Vec2i sz);
+        int AnimateSprite(Vec2i frameStart, Vec2i frameSize, unsigned int maxFrames, unsigned int animSpeed);
         /* void UpdateRgdb(); */
         ~MovableSprite();
 
     protected:
+        MovableSprite(){}
         MovableSprite(Vec2i p, Vec2i sz, std::string srcImage);
     
     private:
         SDL_Rect movableDestRect, movableSrcRect;
         SDL_Texture* movableTexture = nullptr;
+        
+        Vec2i lastAnimationFrameStart = {};
+        unsigned int animationFrame = 0;
+        unsigned int animationTick = 0;
+
 };
 
 #endif

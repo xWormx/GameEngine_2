@@ -36,6 +36,54 @@ void MovableSprite::Tick()
 
 }
 
+void MovableSprite::Move(Vec2i& movement)
+{ 
+    movableDestRect.x += movement.x;
+    movableDestRect.y += movement.y;
+    if(HasCollider2D())
+    {
+        SDL_Rect bounds = GetCollider2D().GetBounds();
+        GetCollider2D().SetBounds({bounds.x + movement.x, bounds.y + movement.y,
+                                bounds.w, bounds.h});
+    } 
+}
+
+void MovableSprite::SetSpriteRegion(Vec2i p, Vec2i sz)
+{
+    movableSrcRect.x = p.x;
+    movableSrcRect.y = p.y;
+    movableSrcRect.w = sz.x;
+    movableSrcRect.h = sz.y;
+}
+
+int MovableSprite::AnimateSprite(Vec2i frameStart, Vec2i frameSize, unsigned int maxFrames, unsigned int animDelay)
+{
+    if(animDelay == 0)
+        throw std::runtime_error("The animation delay must be greater than 0!\n");
+
+    if(frameStart.x != lastAnimationFrameStart.x || frameStart.y != lastAnimationFrameStart.y)
+    {
+        animationTick = 0;
+        animationFrame = 0;
+    }
+
+    if(animationTick++ % animDelay == 0)
+    {
+        if(animationFrame >= maxFrames)
+        {
+            animationFrame = 0;
+        }
+
+        Vec2i p = {(frameStart.x * frameSize.x) + (animationFrame * frameSize.x), 0};
+        Vec2i sz = {frameSize.x, frameSize.y};
+        SetSpriteRegion(p, sz);
+        animationFrame++;
+
+    }
+    lastAnimationFrameStart = frameStart;
+    return animationFrame;
+}
+
 MovableSprite::~MovableSprite()
 {
     SDL_DestroyTexture(movableTexture);

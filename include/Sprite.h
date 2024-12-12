@@ -8,7 +8,7 @@
 #include <iostream>
 #include <stdexcept>
 #include "Constants.h"
-#include "Collider2D.h"
+#include "Collider2D.h" 
 
 class Sprite
 {
@@ -19,6 +19,7 @@ class Sprite
         virtual void OnKeyUp(const SDL_Event&) {}
         virtual void OnMouseUp(const SDL_Event&) {}
         virtual void OnMouseDown(const SDL_Event&) {}
+        virtual void Move(Vec2i&){}
         virtual ~Sprite();
 
         const SDL_Rect& GetSrcRect() { return srcRect; }
