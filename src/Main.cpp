@@ -109,7 +109,7 @@ class Particle : public MovableSprite
             }
         }
     private:
-        int lifeTime = 20;
+        int lifeTime = 40;
         Vec2i velocity;
 };
 
@@ -189,6 +189,27 @@ void ChangeLevel()
         gameEngine.LoadLevel(0);
 }
 
+
+class Timer : public TextFragment
+{
+    public:
+        Timer(Vec2i p, Vec2i sz, std::string txt, SDL_Color c) : TextFragment(p, sz, txt, c)
+        {}
+
+        void Tick()
+        {
+            currentTime = SDL_GetTicks();
+            fTimeElapsed = currentTime / 1000.0f;
+            strElapsedTime = "Time: " + std::to_string(fTimeElapsed);
+            SetText(strElapsedTime);
+        }
+
+    private:
+        Uint32 currentTime;
+        double fTimeElapsed = 0.0f;
+        std::string strElapsedTime;
+};
+
 int main(int argv, char **argc)
 {
     gameEngine.LoadSound("shot", "shot.wav");
@@ -204,11 +225,15 @@ int main(int argv, char **argc)
     player->InstallCollider2D({player->GetDestRect().x, player->GetDestRect().y + 3*(player->GetDestRect().h / 4),
                                 player->GetDestRect().w, player->GetDestRect().h / 4}, false);
 
+    Timer* timer = new Timer({300, 300}, {100, 100}, "Timer", {0, 255, 0, 255});
+    
+    
     Level* level2 = Level::GetInstance(1);
     level1->AddSprite(player);
     level1->AddSprite(mvSpr);
     level1->AddSprite(text1);
-    
+    level1->AddSprite(timer);
+    level2->AddSprite(timer);
     gameEngine.SetFps(60);
 
     gameEngine.AddLevel(level1);
