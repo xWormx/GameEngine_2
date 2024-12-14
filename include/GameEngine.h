@@ -67,6 +67,8 @@ class GameEngine
         std::random_device randomDevice;
         std::mt19937 gen;
 
+        std::string strTextInput = "";
+        bool textInputRecieved;
 
         bool loadLevelRequested;
         unsigned int levelIndexToLoad;

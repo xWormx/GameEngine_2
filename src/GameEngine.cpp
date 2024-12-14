@@ -17,12 +17,12 @@ GameEngine::GameEngine(int winWidth, int winHeight) : windowWidth(winWidth), win
 void GameEngine::Run()
 {   
     running = true;
-    /* Handle framrate */
-    /* start text input */
+    SDL_StartTextInput();
 
     while(running)
     {
         Uint32 nextTick = SDL_GetTicks() + tickInterval;
+        textInputRecieved = false;
 
         if(loadLevelRequested)
             SetCurrentLevel();
@@ -46,7 +46,7 @@ void GameEngine::Run()
 
     }
 
-    /* Stop textinput */
+    SDL_StopTextInput();
 }
 
 void GameEngine::SetFps(unsigned int fps)
@@ -91,6 +91,11 @@ void GameEngine::HandleEvents()
                 {
                     for(Sprite* s : currentLevel->GetSprites())
                         s->OnMouseUp(event);
+                } break;
+            case SDL_TEXTINPUT:
+                {
+                    textInputRecieved = true;
+                    strTextInput += event.text.text;
                 } break;
         }
     }

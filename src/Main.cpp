@@ -158,10 +158,10 @@ class Player : public MovableSprite
                 Move(speed);
                 name->Move(speed);
             }
-            AnimateSprite({0, 0}, {32, 80}, 4, 3);
+            AnimateSprite({0, 0}, {32, 80}, 4, 5);
             static int frameTick = 0;
 
-            if((frameTick++ % 9) == 0)
+            if((frameTick++ % 5) == 0)
             {
                 if(shooting)
                 {
@@ -216,11 +216,11 @@ int main(int argv, char **argc)
     gameEngine.LoadSound("explosion", "explosion.wav");
     gameEngine.LoadSound("release", "release.wav");
     gameEngine.LoadMusic("mainTheme", "mainTheme.wav");
-    gameEngine.PlayMusic("mainTheme", 10);
+    gameEngine.PlayMusic("mainTheme", 3);
     MovableSprite* mvSpr = MovableSprite::GetInstance({0, 0}, {300, 200}, "MainMenuBackground.png");
     TextFragment* text1 = TextFragment::GetInstance({100, 100}, {100, 100}, "YOOOO", {255, 0, 0, 255});
 
-    MovableSprite* player = new Player({100,100}, {200, 400}, "PersonIdle_Small.png", text1);
+    MovableSprite* player = new Player({100,100}, {30, 80}, "PersonIdle_Small.png", text1);
 
     player->InstallCollider2D({player->GetDestRect().x, player->GetDestRect().y + 3*(player->GetDestRect().h / 4),
                                 player->GetDestRect().w, player->GetDestRect().h / 4}, false);
@@ -240,9 +240,6 @@ int main(int argv, char **argc)
     gameEngine.AddLevel(level2);
     gameEngine.RegisterKeyCallback('c', Attack);
     gameEngine.RegisterKeyCallback('l', ChangeLevel);
-    //gameEngine.RegisterKeyCallback('c', AddImageToLevel);
-    //gameEngine.RegisterKeyCallback('t', PlayTestSound);
-    gameEngine.RegisterKeyCallback('p', RemoveImageFromLevel);
     gameEngine.RegisterKeyCallback('a', mvSpr, &MovableSprite::Print);
 
 
