@@ -54,7 +54,11 @@ class GameEngine
         void LoadMusic(std::string nameKey, std::string srcPath);
         void PlayMusic(std::string keyName, int volume);
 
+        void AppendTextInput(std::string& text) { text += strTextInput;}
+        bool GetTextInputRecieved() {return textInputRecieved;}
+
         int GetRandomNumberInRange(int min, int max);
+
         SDL_Renderer* GetRenderer() {return renderer;}
         TTF_Font* GetFont()         {return font;}
 

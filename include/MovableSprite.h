@@ -12,9 +12,10 @@ class MovableSprite : public Sprite
         void Print() { std::cout << "FROM MOV SPRITE\n"; }
         const SDL_Rect& GetDestRect() {return movableDestRect; }
         const SDL_Rect& GetSrcRect() {return movableSrcRect; }
-        void Move(Vec2i& movement); 
         void SetSpriteRegion(Vec2i p, Vec2i sz);
         int AnimateSprite(Vec2i frameStart, Vec2i frameSize, unsigned int maxFrames, unsigned int animSpeed);
+        
+        virtual void Move(Vec2i& movement); 
         /* void UpdateRgdb(); */
         ~MovableSprite();
 

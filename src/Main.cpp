@@ -2,6 +2,7 @@
 #include "MovableSprite.h"
 #include "Level.h"
 #include "TextFragment.h"
+#include "TextField.h"
 
 void Attack()
 {
@@ -227,8 +228,10 @@ int main(int argv, char **argc)
 
     Timer* timer = new Timer({300, 300}, {100, 100}, "Timer", {0, 255, 0, 255});
     
-    
+    TextField* tf = TextField::GetInstance({500, 300}, {255, 0, 0, 255});
+
     Level* level2 = Level::GetInstance(1);
+    level1->AddSprite(tf);
     level1->AddSprite(player);
     level1->AddSprite(mvSpr);
     level1->AddSprite(text1);

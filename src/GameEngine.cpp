@@ -23,6 +23,7 @@ void GameEngine::Run()
     {
         Uint32 nextTick = SDL_GetTicks() + tickInterval;
         textInputRecieved = false;
+        strTextInput = "";
 
         if(loadLevelRequested)
             SetCurrentLevel();
