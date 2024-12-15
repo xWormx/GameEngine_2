@@ -149,9 +149,12 @@ class Player : public MovableSprite
 
             if(gameEngine.GetKeyPressedOnce('b'))
             {
-                Particle* p = new Particle({GetDestRect().x, GetDestRect().y}, {32,16}, "BulletTest.png");
-                gameEngine.GetCurrentLevel()->AddSprite(p);
-                gameEngine.PlaySound("shot", 15);
+                if(GetNameTag() == "player")
+                {
+                    Particle* p = new Particle({GetDestRect().x, GetDestRect().y}, {32,16}, "BulletTest.png");
+                    gameEngine.GetCurrentLevel()->AddSprite(p);
+                    gameEngine.PlaySound("shot", 6);
+                }
             }
 
         }
@@ -186,6 +189,21 @@ class Timer : public TextFragment
             fTimeElapsed = currentTime / 1000.0f;
             strElapsedTime = "Time: " + std::to_string(fTimeElapsed);
             SetText(strElapsedTime);
+            if(gameEngine.GetKeyPressed(SDLK_SPACE))
+            {
+                /*
+                    double currentTime = StartTimer(10.0);
+                
+                    StartTime(double timeCap)
+                    {
+                        // originStartTime måste sättas i en fast variabel,
+                        // som originStartTime = fTimeElapsed;
+                        InitializeTimer();
+                        double currentTime = timeCap - (fTimeElapsed - originStartTime);
+                        return currentTime;
+                    }
+                */
+            }
         }
 
     private:
@@ -219,7 +237,7 @@ int main(int argv, char **argc)
     Sprite* mainMenuBkg = StaticSprite::GetInstance({0, 0}, {gameEngine.GetWindowSize().x, gameEngine.GetWindowSize().y}, "MainMenuBackground.png");
     TextFragment* text1 = TextFragment::GetInstance({100, 100}, {100, 100}, "player 1", {255, 0, 0, 255});
     TextFragment* text2 = TextFragment::GetInstance({100, 100}, {100, 100}, "player 2", {255, 0, 0, 255});
-    
+
     Player* player = new Player({100,100}, {50, 100}, "PersonIdle_Small.png", text1);
     player->SetTag("player");
     player->SetMovementKeys(SDLK_LEFT, SDLK_RIGHT, SDLK_UP, SDLK_DOWN);
