@@ -15,10 +15,6 @@ class Sprite
     public:
         virtual void Draw() const;
         virtual void Tick() = 0;
-        virtual void OnKeyDown(const SDL_Event&) {}
-        virtual void OnKeyUp(const SDL_Event&) {}
-        virtual void OnMouseUp(const SDL_Event&) {}
-        virtual void OnMouseDown(const SDL_Event&) {}
         virtual void Move(Vec2i&){}
         virtual ~Sprite();
 
@@ -26,8 +22,12 @@ class Sprite
         const SDL_Rect& GetDestRect() { return destRect; }
         SDL_Texture* GetTexture() {return texture;}
         Collider2D& GetCollider2D();
+        std::string GetNameTag() { return nameTag; }
+
         void InstallCollider2D(SDL_Rect boundsRect, bool bStatic);
         bool HasCollider2D();
+        virtual void OnCollision2D(Sprite* other){}
+        void SetTag(std::string tag) { nameTag = tag; }
     protected:
         Sprite() {}
         Sprite(Vec2i pos, Vec2i size);
@@ -37,6 +37,7 @@ class Sprite
         SDL_Rect destRect, srcRect;
         SDL_Texture* texture = nullptr;
         Collider2D* collider2D = nullptr;
+        std::string nameTag;
 
 };
 

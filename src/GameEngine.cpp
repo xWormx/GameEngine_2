@@ -24,6 +24,7 @@ void GameEngine::Run()
         Uint32 nextTick = SDL_GetTicks() + tickInterval;
         textInputRecieved = false;
         strTextInput = "";
+        inputComponent.ClearSingleInputKeys();
 
         if(loadLevelRequested)
             SetCurrentLevel();
@@ -71,27 +72,23 @@ void GameEngine::HandleEvents()
                     if(event.key.keysym.sym == SDLK_ESCAPE)
                         running = false;
 
-                    for(Sprite* s : currentLevel->GetSprites())
-                        s->OnKeyDown(event);
+                    HandleKeyDownEvents(event);
                     HandleKeyCallbacks(event.key.keysym.sym);
+
                 } break;
             case SDL_KEYUP:
                 {
-                    for(Sprite* s : currentLevel->GetSprites())
-                        s->OnKeyUp(event);
+                    HandleKeyUpEvents(event);
                 } break;
             
             case SDL_MOUSEBUTTONDOWN:
                 {
-                    for(Sprite* s : currentLevel->GetSprites())
-                        s->OnMouseDown(event);
-
+                    HandleMouseDownEvents(event);
                 } break;
             
             case SDL_MOUSEBUTTONUP:
                 {
-                    for(Sprite* s : currentLevel->GetSprites())
-                        s->OnMouseUp(event);
+                    HandleMouseUpEvents(event);
                 } break;
             case SDL_TEXTINPUT:
                 {
@@ -129,8 +126,8 @@ void GameEngine::HandleCollisions()
                 {
                     if(CheckCollision(s, other))
                     {
-                        //std::cout << "COLLISION\n"; 
                         ResolveCollision(s, other);
+                        s->OnCollision2D(other);
                     }
                 }     
             }
@@ -146,7 +143,7 @@ bool GameEngine::CheckCollision(Sprite* s, Sprite* other)
     if((rectA.x + rectA.w) > rectB.x &&
         rectA.x < (rectB.x + rectB.w))
     {
-        if(rectA.y + (rectA.h > rectB.y) &&
+        if((rectA.y + rectA.h) > rectB.y &&
             rectA.y < (rectB.y + rectB.h))
                 return true;
     }
@@ -206,8 +203,6 @@ void GameEngine::AddLevel(Level* level)
         LoadLevel(level->GetLevelIndex());
         SetCurrentLevel();
     }
-
-
 }
 
 void GameEngine::DrawLevel()
@@ -285,6 +280,15 @@ int GameEngine::GetRandomNumberInRange(int min, int max)
     std::uniform_int_distribution<> distr(min, max);
 
     return distr(gen);
+}
+
+const Vec2i GameEngine::GetWindowSize()
+{
+    Vec2i size = {};
+
+    SDL_GetWindowSize(window, &size.x, &size.y);
+
+    return size;
 }
 
 void GameEngine::InitializeSDL()
@@ -376,6 +380,29 @@ void GameEngine::PlayMusic(std::string keyName, int volume)
 {
     Mix_VolumeMusic(volume);
     Mix_PlayMusic(musicMap.at(keyName), -1);
+}
+
+void GameEngine::HandleKeyDownEvents(const SDL_Event& event)
+{
+    inputComponent.SetKeyCodePressed(inputComponent.GetKeyCodeFromEvent(event));
+}
+
+void GameEngine::HandleKeyUpEvents(const SDL_Event& event)
+{
+    inputComponent.SetKeyCodeReleased(inputComponent.GetKeyCodeFromEvent(event)); 
+}
+
+void GameEngine::HandleMouseDownEvents(const SDL_Event& event)
+{
+    
+    inputComponent.SetMousePressed(inputComponent.GetMouseButtonFromEvent(event));
+}
+
+void GameEngine::HandleMouseUpEvents(const SDL_Event& event)
+{
+    
+    inputComponent.SetMouseReleased(inputComponent.GetMouseButtonFromEvent(event));
+        
 }
 
 void GameEngine::CreateWindowAndRenderer(int width, int height)

@@ -15,6 +15,7 @@
 #include <random>
 #include "Vec2i.h"
 #include "Level.h"
+#include "InputComponent.h"
 
 class Level;
 class Sprite;
@@ -59,6 +60,11 @@ class GameEngine
 
         int GetRandomNumberInRange(int min, int max);
 
+        bool GetKeyPressedOnce(const int keyCode) const { return inputComponent.GetKeyPressedOnce(keyCode); }
+        bool GetKeyPressed(const int keyCode) const { return inputComponent.GetKeyPressed(keyCode); }
+        bool GetMousePressed(const int keyCode) const { return inputComponent.GetMousePressed(keyCode); }
+
+        const Vec2i GetWindowSize();
         SDL_Renderer* GetRenderer() {return renderer;}
         TTF_Font* GetFont()         {return font;}
 
@@ -68,26 +74,30 @@ class GameEngine
         int windowWidth, windowHeight;
         int framesPerSecond, tickInterval;
 
+        bool running;
+        
+        SDL_Window* window;
+        SDL_Renderer* renderer;
+        TTF_Font* font;
+        SDL_Event event;
+        
         std::random_device randomDevice;
         std::mt19937 gen;
 
         std::string strTextInput = "";
         bool textInputRecieved;
 
+        InputComponent inputComponent;
+
         bool loadLevelRequested;
         unsigned int levelIndexToLoad;
         Level* currentLevel;
         std::vector<Level*> levels;
 
-        bool running;
-        SDL_Window* window;
-        SDL_Renderer* renderer;
-        SDL_Event event;
-
         std::unordered_map<SDL_Keycode, std::vector<void(*)()>> keyCallbacks;
         std::unordered_map<SDL_Keycode, std::vector<std::function<void()>>> memberKeyCallbacks;
 
-        TTF_Font* font;
+
 
         std::unordered_map<std::string, Mix_Chunk*> soundMap;
         std::unordered_map<std::string, Mix_Music*> musicMap;
@@ -104,6 +114,11 @@ class GameEngine
         bool CheckCollision(Sprite* s, Sprite* other);
         void ResolveCollision(Sprite* s, Sprite* other);
         void AdjustTickInterval() { tickInterval = 1000 / framesPerSecond; }
+        
+        void HandleKeyDownEvents(const SDL_Event&);
+        void HandleKeyUpEvents(const SDL_Event&);
+        void HandleMouseDownEvents(const SDL_Event&);
+        void HandleMouseUpEvents(const SDL_Event&);
 
         void DEBUGDrawColliders();
 };

@@ -21,6 +21,12 @@ void TextField::Tick()
         gameEngine.AppendTextInput(currentText);
         RenderNewCurrentText();
     }
+
+    if(gameEngine.GetKeyPressedOnce(SDLK_BACKSPACE))
+    {
+         currentText.pop_back();
+         RenderNewCurrentText();
+    }   
 }
 
 void TextField::OnKeyDown(const SDL_Event& e)

@@ -1,4 +1,5 @@
 #include "GameEngine.h"
+#include "StaticSprite.h"
 #include "MovableSprite.h"
 #include "Level.h"
 #include "TextFragment.h"
@@ -97,7 +98,7 @@ class Particle : public MovableSprite
             {
                 for(int i = 0; i < 5; i ++)
                 {
-                    Explosion* p = new Explosion({GetDestRect().x, GetDestRect().y}, {32,32}, "Particle.png");
+                    Explosion* p = new Explosion({GetDestRect().x, GetDestRect().y}, {16,16}, "Particle.png");
                     gameEngine.GetCurrentLevel()->AddSprite(p);
                     gameEngine.PlaySound("release", 5);
                 }
@@ -121,74 +122,56 @@ class Player : public MovableSprite
         {
         }
 
-        void OnKeyDown(const SDL_Event& e)
-        {
-            int s = 3;
-            if(e.key.keysym.sym == SDLK_d)
-                speed.x = s;
-
-            if(e.key.keysym.sym == SDLK_a)
-                speed.x = -s;
-
-            if(e.key.keysym.sym == SDLK_w)
-                speed.y = -s;
-
-            if(e.key.keysym.sym == SDLK_s)
-                speed.y = s;
-            
-            if(e.key.keysym.sym == SDLK_SPACE)
-                shooting = true;
-        }
-
-        void OnKeyUp(const SDL_Event& e)
-        {
-            if(e.key.keysym.sym == SDLK_d || e.key.keysym.sym == SDLK_a)
-                speed.x = 0;
-            
-            if(e.key.keysym.sym == SDLK_w || e.key.keysym.sym == SDLK_s)
-                speed.y = 0;
-            
-            if(e.key.keysym.sym == SDLK_SPACE)
-                shooting = false;
-        }
-
         void Tick()
         {
+            static int s = 3;
+            if(gameEngine.GetKeyPressed(rightKey))
+                speed.x = s; 
+                
+            if(gameEngine.GetKeyPressed(leftKey))
+                speed.x = -s;
+                
+            if(gameEngine.GetKeyPressed(upKey))
+                speed.y = -s;
+                
+            if(gameEngine.GetKeyPressed(downKey))
+                speed.y = s;
+
             if(speed.x != 0 || speed.y != 0)
             {
                 Move(speed);
                 name->Move(speed);
+                speed = {0,0};
             }
             AnimateSprite({0, 0}, {32, 80}, 4, 5);
             static int frameTick = 0;
 
-            if((frameTick++ % 5) == 0)
+
+            if(gameEngine.GetKeyPressedOnce('b'))
             {
-                if(shooting)
-                {
-                    Particle* p = new Particle({GetDestRect().x, GetDestRect().y}, {32,32}, "BulletTest.png");
-                    gameEngine.GetCurrentLevel()->AddSprite(p);
-                    gameEngine.PlaySound("shot", 15);
-                }
+                Particle* p = new Particle({GetDestRect().x, GetDestRect().y}, {32,16}, "BulletTest.png");
+                gameEngine.GetCurrentLevel()->AddSprite(p);
+                gameEngine.PlaySound("shot", 15);
             }
 
         }
 
+        void SetMovementKeys(int l, int r, int u, int d) { leftKey = l; rightKey = r; upKey = u; downKey = d;}
+
+        void OnCollision2D(Sprite* other)
+        {
+            if(other->GetNameTag() == "player TWO")
+            {
+                std::cout << "Im: " << GetNameTag() << " getting hit by: " << other->GetNameTag() << "\n";
+            }
+        }
     private:
         Vec2i speed = {};
         TextFragment* name;
         bool shooting = false;
+        int leftKey, rightKey, upKey, downKey;
         
 };
-
-
-void ChangeLevel()
-{
-    if(gameEngine.GetCurrentLevelIndex() == 0)
-        gameEngine.LoadLevel(1);
-    else
-        gameEngine.LoadLevel(0);
-}
 
 
 class Timer : public TextFragment
@@ -211,6 +194,21 @@ class Timer : public TextFragment
         std::string strElapsedTime;
 };
 
+void ChangeLevel()
+{
+    switch(gameEngine.GetCurrentLevelIndex())
+    {
+        case 0:
+            {
+                gameEngine.LoadLevel(1);
+            } break;
+        case 1:
+            {   
+                gameEngine.LoadLevel(0);
+            } break;
+    }
+}
+
 int main(int argv, char **argc)
 {
     gameEngine.LoadSound("shot", "shot.wav");
@@ -218,22 +216,37 @@ int main(int argv, char **argc)
     gameEngine.LoadSound("release", "release.wav");
     gameEngine.LoadMusic("mainTheme", "mainTheme.wav");
     gameEngine.PlayMusic("mainTheme", 3);
-    MovableSprite* mvSpr = MovableSprite::GetInstance({0, 0}, {300, 200}, "MainMenuBackground.png");
-    TextFragment* text1 = TextFragment::GetInstance({100, 100}, {100, 100}, "YOOOO", {255, 0, 0, 255});
-
-    MovableSprite* player = new Player({100,100}, {30, 80}, "PersonIdle_Small.png", text1);
-
+    Sprite* mainMenuBkg = StaticSprite::GetInstance({0, 0}, {gameEngine.GetWindowSize().x, gameEngine.GetWindowSize().y}, "MainMenuBackground.png");
+    TextFragment* text1 = TextFragment::GetInstance({100, 100}, {100, 100}, "player 1", {255, 0, 0, 255});
+    TextFragment* text2 = TextFragment::GetInstance({100, 100}, {100, 100}, "player 2", {255, 0, 0, 255});
+    
+    Player* player = new Player({100,100}, {50, 100}, "PersonIdle_Small.png", text1);
+    player->SetTag("player");
+    player->SetMovementKeys(SDLK_LEFT, SDLK_RIGHT, SDLK_UP, SDLK_DOWN);
     player->InstallCollider2D({player->GetDestRect().x, player->GetDestRect().y + 3*(player->GetDestRect().h / 4),
                                 player->GetDestRect().w, player->GetDestRect().h / 4}, false);
 
+
+    Player* player2 = new Player({100,100}, {30, 80}, "PersonIdle_Small.png", text2);
+    player2->SetTag("player TWO");
+    player2->SetMovementKeys('a', 'd', 'w', 's');
+    player2->InstallCollider2D({player2->GetDestRect().x, player2->GetDestRect().y + 3*(player2->GetDestRect().h / 4),
+                                player2->GetDestRect().w, player2->GetDestRect().h / 4}, false);
+
+
     Timer* timer = new Timer({300, 300}, {100, 100}, "Timer", {0, 255, 0, 255});
     
-    TextField* tf = TextField::GetInstance({500, 300}, {255, 0, 0, 255});
+    TextField* tf1 = TextField::GetInstance({500, 300}, {255, 0, 0, 255});
+    TextField* tf2 = TextField::GetInstance({500, 400}, {0, 0, 255, 255});
 
     Level* level2 = Level::GetInstance(1);
-    level1->AddSprite(tf);
+    level1->AddSprite(mainMenuBkg);
+
+    level1->AddSprite(tf1);
+    level1->AddSprite(tf2);
     level1->AddSprite(player);
-    level1->AddSprite(mvSpr);
+    level1->AddSprite(player2);
+    
     level1->AddSprite(text1);
     level1->AddSprite(timer);
     level2->AddSprite(timer);
@@ -243,7 +256,7 @@ int main(int argv, char **argc)
     gameEngine.AddLevel(level2);
     gameEngine.RegisterKeyCallback('c', Attack);
     gameEngine.RegisterKeyCallback('l', ChangeLevel);
-    gameEngine.RegisterKeyCallback('a', mvSpr, &MovableSprite::Print);
+   
 
 
 
