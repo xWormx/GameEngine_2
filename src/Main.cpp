@@ -5,55 +5,12 @@
 #include "TextFragment.h"
 #include "TextField.h"
 
-void Attack()
-{
-    std::cout << "Attack\n";
-}
-
-void Move()
-{
-    std::cout << "Move\n";
-}
-
 #define FPS 60
-
 
 static int x = 1;
 static int y = 0;
     
-Level* level1 = Level::GetInstance(0);
-
-void AddImageToLevel()
-{
-    MovableSprite* mvSpr = MovableSprite::GetInstance({x * 100, y * 20}, {64, 64}, "Particle.png");
-    x++;
-    if(x >= 5)
-    {
-        y++;
-        x = 0;
-    }
-    const SDL_Rect& r = mvSpr->GetDestRect();
-    mvSpr->InstallCollider2D({r.x, r.y, r.w, r.h}, false);   
-    level1->AddSprite(mvSpr);
-    gameEngine.PlaySound("shot", 10);
-}
-
-void PlayTestSound()
-{
-    gameEngine.PlaySound("shot", 10);
-}
-
-void RemoveImageFromLevel()
-{
-    std::vector<Sprite*> s = level1->GetSprites();
-    level1->RemoveSprite(s.back());
-    x--;
-    if(x < 0)
-    {
-        y--;
-        x = 5;
-    }       
-}
+Level* levelMainMenu = Level::GetInstance(0);
 
 class Explosion : public MovableSprite
 {
@@ -235,6 +192,7 @@ int main(int argv, char **argc)
     gameEngine.LoadMusic("mainTheme", "mainTheme.wav");
     gameEngine.PlayMusic("mainTheme", 3);
     Sprite* mainMenuBkg = StaticSprite::GetInstance({0, 0}, {gameEngine.GetWindowSize().x, gameEngine.GetWindowSize().y}, "MainMenuBackground.png");
+    
     TextFragment* text1 = TextFragment::GetInstance({100, 100}, {100, 100}, "player 1", {255, 0, 0, 255});
     TextFragment* text2 = TextFragment::GetInstance({100, 100}, {100, 100}, "player 2", {255, 0, 0, 255});
 
@@ -258,24 +216,21 @@ int main(int argv, char **argc)
     TextField* tf2 = TextField::GetInstance({500, 400}, {0, 0, 255, 255});
 
     Level* level2 = Level::GetInstance(1);
-    level1->AddSprite(mainMenuBkg);
+    levelMainMenu->AddSprite(mainMenuBkg);
 
-    level1->AddSprite(tf1);
-    level1->AddSprite(tf2);
-    level1->AddSprite(player);
-    level1->AddSprite(player2);
+    levelMainMenu->AddSprite(tf1);
+    levelMainMenu->AddSprite(tf2);
+    levelMainMenu->AddSprite(player);
+    levelMainMenu->AddSprite(player2);
     
-    level1->AddSprite(text1);
-    level1->AddSprite(timer);
+    levelMainMenu->AddSprite(text1);
+    levelMainMenu->AddSprite(timer);
     level2->AddSprite(timer);
     gameEngine.SetFps(60);
 
-    gameEngine.AddLevel(level1);
+    gameEngine.AddLevel(levelMainMenu);
     gameEngine.AddLevel(level2);
-    gameEngine.RegisterKeyCallback('c', Attack);
     gameEngine.RegisterKeyCallback('l', ChangeLevel);
-   
-
 
 
     gameEngine.Run();
