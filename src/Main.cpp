@@ -42,8 +42,8 @@ class Particle : public MovableSprite
     public:
         Particle(Vec2i p, Vec2i sz, std::string srcImage) : MovableSprite(p, sz, srcImage)
         {
-            velocity.x = gameEngine.GetRandomNumberInRange(3, 8);
-            velocity.y = gameEngine.GetRandomNumberInRange(-5, 5);
+            velocity.x = 13;//gameEngine.GetRandomNumberInRange(3, 8);
+            velocity.y = gameEngine.GetRandomNumberInRange(-2, 2);
         }
 
         void Tick()
@@ -101,11 +101,13 @@ class Player : public MovableSprite
             static int frameTick = 0;
 
 
-            if(gameEngine.GetKeyPressedOnce('b'))
+            if(gameEngine.GetKeyPressed('b'))
             {
                 if(GetNameTag() == "player")
                 {
                     Particle* p = new Particle({GetDestRect().x, GetDestRect().y}, {32,16}, "BulletTest.png");
+                    SDL_Rect bounds = p->GetDestRect();
+                    p->InstallCollider2D(bounds, false);
                     gameEngine.GetCurrentLevel()->AddSprite(p);
                     gameEngine.PlaySound("shot", 6);
                 }
@@ -167,6 +169,35 @@ class Timer : public TextFragment
         std::string strElapsedTime;
 };
 
+
+/*
+    switch(event)
+    {
+        case SDL_MOUSEMOVEMENT:
+            {
+                for(Sprite* s : sprites)
+                {
+                    Vec2i mp = gameEngine.GetMousePosition();
+                    if((mp.x > s->GetDestRect().x  &&  mp.x < s->GetDestRect().x + s->GetDestRect().w) &&
+                        mp.y > s->GetDestRect().y && mp.y < s->GetDestRect().y + s->GetDestRect().h)
+                    {
+                        s->OnMouseHover();
+                    }
+                }
+            } break;
+        
+        case SDL_MOUSEBUTTONDOWN:
+            {
+                for(Sprite* s : sprites)
+                {
+                    if(s->MouseIsHovering())
+                        s->OnMousePress();
+                }
+
+            } break;
+        
+    }
+*/
 class MenuButton : public Button
 {
     public: 
@@ -180,74 +211,44 @@ class MenuButton : public Button
                 SetSpriteRegion({0, 1200}, {800, 600});
         }
 
-        void OnMouseHover()
+        void OnMouseEnter()
         {
-            Vec2i mp = gameEngine.GetMousePosition();
-            if( (mp.x > GetDestRect().x  &&  mp.x < GetDestRect().x + GetDestRect().w) &&
-                    mp.y > GetDestRect().y && mp.y < GetDestRect().y + GetDestRect().h)
-            {
-                mouseHover = true;
+            if(GetNameTag() == "startButton")
                 SetSpriteRegion({800, 0}, {800, 600});
-                
-                if(GetNameTag() == "startButton")
-                    SetSpriteRegion({800, 0}, {800, 600});
-                else if(GetNameTag() == "creditsButton")
-                    SetSpriteRegion({800, 600}, {800, 600});
-                else if(GetNameTag() == "quitButton")
-                    SetSpriteRegion({800, 1200}, {800, 600});
-            }
-            else
-            {
-                mouseHover = false;
-                wasPressed = false;
+            else if(GetNameTag() == "creditsButton")
+                SetSpriteRegion({800, 600}, {800, 600});
+            else if(GetNameTag() == "quitButton")
+                SetSpriteRegion({800, 1200}, {800, 600});      
+        }
 
-                if(GetNameTag() == "startButton")
-                    SetSpriteRegion({0, 0}, {800, 600});
-                else if(GetNameTag() == "creditsButton")
-                    SetSpriteRegion({0, 600}, {800, 600});
-                else if(GetNameTag() == "quitButton")
-                    SetSpriteRegion({0, 1200}, {800, 600});
-            }
-                
+        void OnMouseExit()
+        {
+            if(GetNameTag() == "startButton")
+                SetSpriteRegion({0, 0}, {800, 600});
+            else if(GetNameTag() == "creditsButton")
+                SetSpriteRegion({0, 600}, {800, 600});
+            else if(GetNameTag() == "quitButton")
+                SetSpriteRegion({0, 1200}, {800, 600});
         }
 
         void OnMousePress()
         {
-            if(mouseHover)
-            {
-                if(gameEngine.GetMousePressed(SDL_BUTTON_LEFT))
-                {
-                    wasPressed = true;
-                    if(GetNameTag() == "startButton")
-                    SetSpriteRegion({1600, 0}, {800, 600});
-                else if(GetNameTag() == "creditsButton")
-                    SetSpriteRegion({1600, 600}, {800, 600});
-                else if(GetNameTag() == "quitButton")
-                    SetSpriteRegion({1600, 1200}, {800, 600});
-                }
-                else
-                {
-                    if(wasPressed)
-                    {
-                        wasPressed = false;
-                        if(GetNameTag() == "startButton")
-                            gameEngine.LoadLevel(1); 
-                        else if(GetNameTag() == "creditsButton")
-                            gameEngine.LoadLevel(2);
-                        else if(GetNameTag() == "quitButton")
-                            gameEngine.LoadLevel(3);
-                    }
-                      
-                }
-            }
-
-
-                
+            if(GetNameTag() == "startButton")
+                SetSpriteRegion({1600, 0}, {800, 600});
+            else if(GetNameTag() == "creditsButton")
+                SetSpriteRegion({1600, 600}, {800, 600});
+            else if(GetNameTag() == "quitButton")
+                SetSpriteRegion({1600, 1200}, {800, 600});   
         }
 
         void OnMouseRelease()
         {
-            
+            if(GetNameTag() == "startButton")
+                gameEngine.LoadLevel(1); 
+            else if(GetNameTag() == "creditsButton")
+                gameEngine.LoadLevel(2);
+            else if(GetNameTag() == "quitButton")
+                gameEngine.QuitEngine();
         }
 
     private:

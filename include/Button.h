@@ -8,7 +8,8 @@ class Button : public MovableSprite
     public:
         static Button* GetInstance(Vec2i p, Vec2i sz, std::string srcImage);
         void Tick();
-        virtual void OnMouseHover(){}
+        virtual void OnMouseEnter(){}
+        virtual void OnMouseExit(){}
         virtual void OnMousePress(){}
         virtual void OnMouseRelease(){}
         ~Button();
@@ -17,6 +18,8 @@ class Button : public MovableSprite
         Button(Vec2i p, Vec2i sz, std::string srcImage);
 
     private:
+        bool mouseHover = false;
+        bool mousePress = false;
         
 };
 

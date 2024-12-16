@@ -25,6 +25,7 @@ class GameEngine
     public:
         GameEngine(int winWidth, int winHeight);
         void Run();
+        void QuitEngine() { running = false; }
         void SetFps(unsigned int fps);
 
         void RegisterKeyCallback(SDL_Keycode key, void(*callback)())
