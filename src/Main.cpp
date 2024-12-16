@@ -8,7 +8,6 @@
 
 #define FPS 60
 
-Level* levelMainMenu = Level::GetInstance(0);
 
 class Explosion : public MovableSprite
 {
@@ -168,12 +167,17 @@ class Timer : public TextFragment
         std::string strElapsedTime;
 };
 
-class TestButton : public Button
+class MenuButton : public Button
 {
     public: 
-        TestButton(TextFragment* txt) : Button({600, 600}, {100, 100}, "StartGameButton.png"), text(txt)
+        MenuButton(Vec2i p, Vec2i sz, std::string srcImage) : Button(p, sz, srcImage)
         {
-            SetSpriteRegion({0, 0}, {800, 600});
+            if(GetNameTag() == "startButton")
+                SetSpriteRegion({0, 0}, {800, 600});
+            else if(GetNameTag() == "screitsButton")
+                SetSpriteRegion({0, 600}, {800, 600});
+            else if(GetNameTag() == "quitButton")
+                SetSpriteRegion({0, 1200}, {800, 600});
         }
 
         void OnMouseHover()
@@ -184,13 +188,25 @@ class TestButton : public Button
             {
                 mouseHover = true;
                 SetSpriteRegion({800, 0}, {800, 600});
-                text->SetText("HOVERING");
+                
+                if(GetNameTag() == "startButton")
+                    SetSpriteRegion({800, 0}, {800, 600});
+                else if(GetNameTag() == "creditsButton")
+                    SetSpriteRegion({800, 600}, {800, 600});
+                else if(GetNameTag() == "quitButton")
+                    SetSpriteRegion({800, 1200}, {800, 600});
             }
             else
             {
                 mouseHover = false;
-                SetSpriteRegion({0, 0}, {800, 600});
-                text->SetText("NOT HOVERING");
+                wasPressed = false;
+
+                if(GetNameTag() == "startButton")
+                    SetSpriteRegion({0, 0}, {800, 600});
+                else if(GetNameTag() == "creditsButton")
+                    SetSpriteRegion({0, 600}, {800, 600});
+                else if(GetNameTag() == "quitButton")
+                    SetSpriteRegion({0, 1200}, {800, 600});
             }
                 
         }
@@ -201,25 +217,44 @@ class TestButton : public Button
             {
                 if(gameEngine.GetMousePressed(SDL_BUTTON_LEFT))
                 {
-                    text->SetText("PRESSED");
+                    wasPressed = true;
+                    if(GetNameTag() == "startButton")
                     SetSpriteRegion({1600, 0}, {800, 600});
+                else if(GetNameTag() == "creditsButton")
+                    SetSpriteRegion({1600, 600}, {800, 600});
+                else if(GetNameTag() == "quitButton")
+                    SetSpriteRegion({1600, 1200}, {800, 600});
+                }
+                else
+                {
+                    if(wasPressed)
+                    {
+                        wasPressed = false;
+                        if(GetNameTag() == "startButton")
+                            gameEngine.LoadLevel(1); 
+                        else if(GetNameTag() == "creditsButton")
+                            gameEngine.LoadLevel(2);
+                        else if(GetNameTag() == "quitButton")
+                            gameEngine.LoadLevel(3);
+                    }
+                      
                 }
             }
+
 
                 
         }
 
         void OnMouseRelease()
         {
-
+            
         }
 
     private:
-        TextFragment* text;
-        bool mouseHover = false;
-    
+        bool mouseHover = false, wasPressed = false;  
 };
 
+Level* levelMainMenu = Level::GetInstance(0);
 void ChangeLevel()
 {
     switch(gameEngine.GetCurrentLevelIndex())
@@ -237,6 +272,8 @@ void ChangeLevel()
 
 int main(int argv, char **argc)
 {
+    gameEngine.SetFps(60);
+
     gameEngine.LoadSound("shot", "shot.wav");
     gameEngine.LoadSound("explosion", "explosion.wav");
     gameEngine.LoadSound("release", "release.wav");
@@ -267,23 +304,28 @@ int main(int argv, char **argc)
     TextField* tf2 = TextField::GetInstance({500, 400}, {0, 0, 255, 255});
 
     TextFragment* tfStartGame = TextFragment::GetInstance({600, 600}, {100, 100}, "START GAME", {255, 0, 255, 255});
-    Button* testButton = new TestButton(tfStartGame);
-
+    Button* startButton = new MenuButton({500, 350}, {200, 100}, "MenuButtons.png");
+    startButton->SetTag("startButton");
+    Button* creditsButton = new MenuButton({500, 500}, {200, 100}, "MenuButtons.png");
+    creditsButton->SetTag("creditsButton");
+    Button* quitButton = new MenuButton({500, 650}, {200, 100}, "MenuButtons.png");
+    quitButton->SetTag("quitButton");
 
     Level* level2 = Level::GetInstance(1);
     
     levelMainMenu->AddSprite(mainMenuBkg);
-    levelMainMenu->AddSprite(testButton);
+    levelMainMenu->AddSprite(startButton);
+    levelMainMenu->AddSprite(creditsButton);
+    levelMainMenu->AddSprite(quitButton);
     levelMainMenu->AddSprite(tfStartGame);
-    levelMainMenu->AddSprite(tf1);
-    levelMainMenu->AddSprite(tf2);
-    levelMainMenu->AddSprite(player);
-    levelMainMenu->AddSprite(player2);
-    
-    levelMainMenu->AddSprite(text1);
-    levelMainMenu->AddSprite(timer);
+    level2->AddSprite(tf1);
+    level2->AddSprite(tf2);
+    level2->AddSprite(player);
+    level2->AddSprite(player2);
+    level2->AddSprite(text1);
     level2->AddSprite(timer);
-    gameEngine.SetFps(60);
+    level2->AddSprite(timer);
+    
 
     gameEngine.AddLevel(levelMainMenu);
     gameEngine.AddLevel(level2);

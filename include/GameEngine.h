@@ -42,6 +42,7 @@ class GameEngine
             memberKeyCallbacks[key].push_back(wrapper);
         }
 
+        void SetWindowSize(int w, int h) { SDL_SetWindowSize(window, w,h); }
         void AddLevel(Level* level);
         void DrawLevel();
         void LoadLevel(unsigned int levelIndex);
