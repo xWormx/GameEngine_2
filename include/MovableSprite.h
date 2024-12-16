@@ -10,8 +10,8 @@ class MovableSprite : public Sprite
         void Draw() const;
         void Tick();
         void Print() { std::cout << "FROM MOV SPRITE\n"; }
-        const SDL_Rect& GetDestRect() {return movableDestRect; }
-        const SDL_Rect& GetSrcRect() {return movableSrcRect; }
+        const virtual SDL_Rect& GetDestRect() {return movableDestRect; }
+        const virtual SDL_Rect& GetSrcRect() {return movableSrcRect; }
         void SetSpriteRegion(Vec2i p, Vec2i sz);
         int AnimateSprite(Vec2i frameStart, Vec2i frameSize, unsigned int maxFrames, unsigned int animSpeed);
         

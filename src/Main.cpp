@@ -4,12 +4,10 @@
 #include "Level.h"
 #include "TextFragment.h"
 #include "TextField.h"
+#include "Button.h"
 
 #define FPS 60
 
-static int x = 1;
-static int y = 0;
-    
 Level* levelMainMenu = Level::GetInstance(0);
 
 class Explosion : public MovableSprite
@@ -134,6 +132,7 @@ class Player : public MovableSprite
 };
 
 
+
 class Timer : public TextFragment
 {
     public:
@@ -167,6 +166,58 @@ class Timer : public TextFragment
         Uint32 currentTime;
         double fTimeElapsed = 0.0f;
         std::string strElapsedTime;
+};
+
+class TestButton : public Button
+{
+    public: 
+        TestButton(TextFragment* txt) : Button({600, 600}, {100, 100}, "StartGameButton.png"), text(txt)
+        {
+            SetSpriteRegion({0, 0}, {800, 600});
+        }
+
+        void OnMouseHover()
+        {
+            Vec2i mp = gameEngine.GetMousePosition();
+            if( (mp.x > GetDestRect().x  &&  mp.x < GetDestRect().x + GetDestRect().w) &&
+                    mp.y > GetDestRect().y && mp.y < GetDestRect().y + GetDestRect().h)
+            {
+                mouseHover = true;
+                SetSpriteRegion({800, 0}, {800, 600});
+                text->SetText("HOVERING");
+            }
+            else
+            {
+                mouseHover = false;
+                SetSpriteRegion({0, 0}, {800, 600});
+                text->SetText("NOT HOVERING");
+            }
+                
+        }
+
+        void OnMousePress()
+        {
+            if(mouseHover)
+            {
+                if(gameEngine.GetMousePressed(SDL_BUTTON_LEFT))
+                {
+                    text->SetText("PRESSED");
+                    SetSpriteRegion({1600, 0}, {800, 600});
+                }
+            }
+
+                
+        }
+
+        void OnMouseRelease()
+        {
+
+        }
+
+    private:
+        TextFragment* text;
+        bool mouseHover = false;
+    
 };
 
 void ChangeLevel()
@@ -215,9 +266,15 @@ int main(int argv, char **argc)
     TextField* tf1 = TextField::GetInstance({500, 300}, {255, 0, 0, 255});
     TextField* tf2 = TextField::GetInstance({500, 400}, {0, 0, 255, 255});
 
-    Level* level2 = Level::GetInstance(1);
-    levelMainMenu->AddSprite(mainMenuBkg);
+    TextFragment* tfStartGame = TextFragment::GetInstance({600, 600}, {100, 100}, "START GAME", {255, 0, 255, 255});
+    Button* testButton = new TestButton(tfStartGame);
 
+
+    Level* level2 = Level::GetInstance(1);
+    
+    levelMainMenu->AddSprite(mainMenuBkg);
+    levelMainMenu->AddSprite(testButton);
+    levelMainMenu->AddSprite(tfStartGame);
     levelMainMenu->AddSprite(tf1);
     levelMainMenu->AddSprite(tf2);
     levelMainMenu->AddSprite(player);

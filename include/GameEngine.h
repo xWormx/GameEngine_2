@@ -65,6 +65,8 @@ class GameEngine
         bool GetMousePressed(const int keyCode) const { return inputComponent.GetMousePressed(keyCode); }
 
         const Vec2i GetWindowSize();
+        const Vec2i GetMousePosition();
+
         SDL_Renderer* GetRenderer() {return renderer;}
         TTF_Font* GetFont()         {return font;}
 

@@ -1,6 +1,7 @@
 #ifndef BUTTON_H
 #define BUTTON_H
 
+#include "MovableSprite.h"
 
 class Button : public MovableSprite
 {

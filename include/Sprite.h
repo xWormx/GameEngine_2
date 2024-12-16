@@ -18,9 +18,9 @@ class Sprite
         virtual void Move(Vec2i&){}
         virtual ~Sprite();
 
-        const SDL_Rect& GetSrcRect() { return srcRect; }
-        const SDL_Rect& GetDestRect() { return destRect; }
-        SDL_Texture* GetTexture() {return texture;}
+        const virtual SDL_Rect& GetSrcRect() { return srcRect; }
+        const virtual SDL_Rect& GetDestRect() { return destRect; }
+        virtual SDL_Texture* GetTexture() {return texture;}
         Collider2D& GetCollider2D();
         std::string GetNameTag() { return nameTag; }
 

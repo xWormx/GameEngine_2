@@ -291,6 +291,16 @@ const Vec2i GameEngine::GetWindowSize()
     return size;
 }
 
+const Vec2i GameEngine::GetMousePosition()
+{
+    Vec2i p = {};
+
+    SDL_GetMouseState(&p.x, &p.y);
+    
+    return p;
+
+}
+
 void GameEngine::InitializeSDL()
 {
     if(SDL_Init(SDL_INIT_EVERYTHING) < 0)
