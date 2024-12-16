@@ -101,7 +101,7 @@ class Player : public MovableSprite
             static int frameTick = 0;
 
 
-            if(gameEngine.GetKeyPressed('b'))
+            if(gameEngine.GetKeyPressedOnce('b'))
             {
                 if(GetNameTag() == "player")
                 {
@@ -169,35 +169,6 @@ class Timer : public TextFragment
         std::string strElapsedTime;
 };
 
-
-/*
-    switch(event)
-    {
-        case SDL_MOUSEMOVEMENT:
-            {
-                for(Sprite* s : sprites)
-                {
-                    Vec2i mp = gameEngine.GetMousePosition();
-                    if((mp.x > s->GetDestRect().x  &&  mp.x < s->GetDestRect().x + s->GetDestRect().w) &&
-                        mp.y > s->GetDestRect().y && mp.y < s->GetDestRect().y + s->GetDestRect().h)
-                    {
-                        s->OnMouseHover();
-                    }
-                }
-            } break;
-        
-        case SDL_MOUSEBUTTONDOWN:
-            {
-                for(Sprite* s : sprites)
-                {
-                    if(s->MouseIsHovering())
-                        s->OnMousePress();
-                }
-
-            } break;
-        
-    }
-*/
 class MenuButton : public Button
 {
     public: 

@@ -28,7 +28,8 @@ MovableSprite::MovableSprite(Vec2i p, Vec2i sz, std::string srcImage) : Sprite(p
 
 void MovableSprite::Draw() const
 {
-    SDL_RenderCopy(gameEngine.GetRenderer(), movableTexture, &movableSrcRect, &movableDestRect);
+    //SDL_RenderCopy(gameEngine.GetRenderer(), movableTexture, &movableSrcRect, &movableDestRect);
+    SDL_RenderCopyEx(gameEngine.GetRenderer(), movableTexture, &movableSrcRect, &movableDestRect, 0.0f, NULL, SDL_FLIP_NONE);
 }
  
 void MovableSprite::Tick()
