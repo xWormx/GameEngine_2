@@ -7,7 +7,7 @@
 class TextFragment : public MovableSprite
 {
     public:
-        static TextFragment* GetInstance(Vec2i pos, Vec2i sz, std::string txt, SDL_Color col);
+        static TextFragment* GetInstance(Vec2i pos, Vec2i sz, std::string txt, SDL_Color col, int fontIndex);
         void Tick();
         void Draw() const;
         void OnKeyDown(const SDL_Event& e);
@@ -19,7 +19,7 @@ class TextFragment : public MovableSprite
         void SetText(std::string txt);
 
     protected:
-        TextFragment(Vec2i pos, Vec2i sz, std::string txt, SDL_Color col);
+        TextFragment(Vec2i pos, Vec2i sz, std::string txt, SDL_Color col, int fontIndex);
         ~TextFragment();
 
     private:

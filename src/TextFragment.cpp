@@ -1,13 +1,13 @@
 #include "TextFragment.h"
 
-TextFragment* TextFragment::GetInstance(Vec2i pos, Vec2i sz, std::string txt, SDL_Color col)
+TextFragment* TextFragment::GetInstance(Vec2i pos, Vec2i sz, std::string txt, SDL_Color col, int fontIndex)
 {
-    return new TextFragment(pos, sz, txt, col);
+    return new TextFragment(pos, sz, txt, col, fontIndex);
 }
 
-TextFragment::TextFragment(Vec2i pos, Vec2i sz, std::string txt, SDL_Color col) : MovableSprite(), textFragDestRect{pos.x, pos.y, sz.x, sz.y}, color(col)
+TextFragment::TextFragment(Vec2i pos, Vec2i sz, std::string txt, SDL_Color col, int fontIndex) : MovableSprite(), textFragDestRect{pos.x, pos.y, sz.x, sz.y}, color(col)
 {
-    SDL_Surface* surface = TTF_RenderText_Solid(gameEngine.GetFont(3), txt.c_str(), color);
+    SDL_Surface* surface = TTF_RenderText_Solid(gameEngine.GetFont(fontIndex), txt.c_str(), color);
     
     if(textTexture)
         SDL_DestroyTexture(textTexture);

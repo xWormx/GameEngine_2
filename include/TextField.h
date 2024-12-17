@@ -6,13 +6,13 @@
 class TextField : public MovableSprite
 {
     public:
-        static TextField* GetInstance(Vec2i p, SDL_Color c);
+        static TextField* GetInstance(Vec2i p, SDL_Color c, int fontIndex);
         void Tick();
         void Draw() const;
         void OnKeyDown(const SDL_Event& e);
 
     protected:
-        TextField(Vec2i p, SDL_Color c);
+        TextField(Vec2i p, SDL_Color c, int fontIndex);
         ~TextField();
 
     private:
@@ -20,6 +20,7 @@ class TextField : public MovableSprite
         SDL_Texture* textFieldTexture = nullptr;
         SDL_Rect textFieldDestRect, textFieldSrcRect;
         SDL_Color color;
+        int iFontIndex;
 
         void RenderNewCurrentText();
 

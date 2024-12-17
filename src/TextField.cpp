@@ -1,11 +1,11 @@
 #include "TextField.h"
 
-TextField* TextField::GetInstance(Vec2i p, SDL_Color c)
+TextField* TextField::GetInstance(Vec2i p, SDL_Color c, int fontIndex)
 {
-    return new TextField(p, c);
+    return new TextField(p, c, fontIndex);
 }
 
-TextField::TextField(Vec2i p, SDL_Color c) : MovableSprite(), textFieldDestRect({p.x, p.y, 0, 0}), color(c)
+TextField::TextField(Vec2i p, SDL_Color c, int fontIndex) : MovableSprite(), textFieldDestRect({p.x, p.y, 0, 0}), color(c), iFontIndex(fontIndex)
 {
 }
 
@@ -43,7 +43,7 @@ void TextField::RenderNewCurrentText()
         currentText = " ";
     
     std::string errMsg;
-    SDL_Surface* surface = TTF_RenderText_Solid(gameEngine.GetFont(), currentText.c_str(), color);
+    SDL_Surface* surface = TTF_RenderText_Solid(gameEngine.GetFont(iFontIndex), currentText.c_str(), color);
 
     if(surface == nullptr)
     {

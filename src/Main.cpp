@@ -135,7 +135,7 @@ class Player : public MovableSprite
 class Timer : public TextFragment
 {
     public:
-        Timer(Vec2i p, SDL_Color c, double timeCap) : TextFragment(p, {1,1}, " ", c), 
+        Timer(Vec2i p, SDL_Color c, double timeCap, int fontIndex) : TextFragment(p, {1,1}, " ", c, fontIndex), 
             fTimeCap(timeCap), fCurrentTime(timeCap)
         {
         }
@@ -242,11 +242,11 @@ int main(int argv, char **argc)
  
     Sprite* mainMenuBkg = StaticSprite::GetInstance({0, 0}, {gameEngine.GetWindowSize().x, gameEngine.GetWindowSize().y}, "MainMenuBackground.png");
     
-    TextFragment* text1 = TextFragment::GetInstance({100, 100}, {100, 100}, "player 1", {255, 0, 0, 255});
-    TextFragment* text2 = TextFragment::GetInstance({100, 100}, {100, 100}, "player 2", {255, 0, 0, 255});
-    TextFragment* credits1 = TextFragment::GetInstance({(gameEngine.GetWindowSize().x / 2) - 150, 150}, {100, 100}, "CREDITS", {255, 0, 0, 255});
-    TextFragment* credits2 = TextFragment::GetInstance({(gameEngine.GetWindowSize().x / 2) - 170, 250}, {100, 100}, "A Game made by", {255, 0, 0, 255});
-    TextFragment* credits3 = TextFragment::GetInstance({(gameEngine.GetWindowSize().x / 2) - 200, 350}, {100, 100}, "Carl-Johan Larson Eliasson", {255, 0, 0, 255});
+    TextFragment* text1 = TextFragment::GetInstance({100, 100}, {100, 100}, "player 1", {255, 0, 0, 255}, 0);
+    TextFragment* text2 = TextFragment::GetInstance({100, 100}, {100, 100}, "player 2", {255, 0, 0, 255}, 1);
+    TextFragment* credits1 = TextFragment::GetInstance({(gameEngine.GetWindowSize().x / 2) - 150, 150}, {100, 100}, "CREDITS", {255, 0, 0, 255}, 2);
+    TextFragment* credits2 = TextFragment::GetInstance({(gameEngine.GetWindowSize().x / 2) - 170, 250}, {100, 100}, "A Game made by", {255, 0, 0, 255}, 3);
+    TextFragment* credits3 = TextFragment::GetInstance({(gameEngine.GetWindowSize().x / 2) - 200, 350}, {100, 100}, "Carl-Johan Larson Eliasson", {255, 0, 0, 255}, 4);
 
     Player* player = new Player({100,100}, {50, 100}, "PersonIdle_Small.png", text1);
     player->SetTag("player");
@@ -261,11 +261,11 @@ int main(int argv, char **argc)
     player2->InstallCollider2D({player2->GetDestRect().x, player2->GetDestRect().y + 3*(player2->GetDestRect().h / 4),
                                 player2->GetDestRect().w, player2->GetDestRect().h / 4}, false);
 
-    Timer* timer10 = new Timer({gameEngine.GetWindowSize().x / 2, 50}, {0, 255, 0, 255}, 10.0f);
+    Timer* timer10 = new Timer({gameEngine.GetWindowSize().x / 2, 50}, {0, 255, 0, 255}, 10.0f, 5);
     
     
-    TextField* tf1 = TextField::GetInstance({500, 300}, {255, 0, 0, 255});
-    TextField* tf2 = TextField::GetInstance({500, 400}, {0, 0, 255, 255});
+    TextField* tf1 = TextField::GetInstance({500, 300}, {255, 0, 0, 255}, 8);
+    TextField* tf2 = TextField::GetInstance({500, 400}, {0, 0, 255, 255}, 2);
 
     Button* _startButton    = new UIButton({500, 350}, {200, 100}, "MenuButtons.png", {0, 0},    {800, 0},    {1600, 0},    {800, 600}, LoadStarGame);
     Button* _creditsButton  = new UIButton({500, 500}, {200, 100}, "MenuButtons.png", {0, 600},  {800, 600},  {1600, 600},  {800, 600}, LoadCredits);
@@ -281,6 +281,7 @@ int main(int argv, char **argc)
     levelStartGame->AddSprite(player);
     levelStartGame->AddSprite(player2);
     levelStartGame->AddSprite(text1);
+    levelStartGame->AddSprite(text2);
     levelStartGame->AddSprite(timer10);
     levelCredits->AddSprite(_backButton);
     levelCredits->AddSprite(credits1);
