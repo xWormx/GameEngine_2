@@ -68,21 +68,35 @@ class GameEngine
 
         const Vec2i GetWindowSize();
         const Vec2i GetMousePosition();
-
+        const double GetDeltaTime() { return fDeltaTime; }
+        const double GetTimeElapsed() { return fTimeElapsed; }
         SDL_Renderer* GetRenderer() {return renderer;}
         TTF_Font* GetFont()         {return font;}
+        TTF_Font* GetFont(int fontIndex) 
+        {
+            try
+            {
+                return fontMap.at(fontIndex);
+            }
+            catch(const std::exception& e)
+            {
+                std::cerr << e.what() << '\n';
+            }
+        }
 
         ~GameEngine();
 
     private:
         int windowWidth, windowHeight;
         int framesPerSecond, tickInterval;
-
         bool running;
-        
+        double fTimeElapsed = 0.0f;
+        double fDeltaTime = 0.0f;
+
         SDL_Window* window;
         SDL_Renderer* renderer;
-        TTF_Font* font;
+        TTF_Font* font, *fontSmall, *fontMedium, *fontBig;
+        std::unordered_map<int, TTF_Font*> fontMap;
         SDL_Event event;
         
         std::random_device randomDevice;

@@ -21,6 +21,7 @@ void GameEngine::Run()
 
     while(running)
     {
+        fTimeElapsed = SDL_GetTicks() / 1000.0f;
         Uint32 nextTick = SDL_GetTicks() + tickInterval;
         textInputRecieved = false;
         strTextInput = "";
@@ -45,6 +46,8 @@ void GameEngine::Run()
         int delay = nextTick - SDL_GetTicks();
         if(delay > 0)
             SDL_Delay(delay);
+        
+        fDeltaTime = (double)delay / 1000.0f;
 
     }
 
@@ -153,7 +156,7 @@ bool GameEngine::CheckCollision(Sprite* s, Sprite* other)
 
 void GameEngine::ResolveCollision(Sprite* s, Sprite* other)
 {
-    SDL_Rect sRect = s->GetDestRect();
+   /*  SDL_Rect sRect = s->GetDestRect();
     SDL_Rect otherRect = other->GetDestRect();
 
     int left, right, top, bottom;
@@ -178,7 +181,7 @@ void GameEngine::ResolveCollision(Sprite* s, Sprite* other)
     {
         top = sRect.y;
         bottom = otherRect.y + otherRect.h;
-    }
+    } */
 
 }
 
@@ -326,9 +329,23 @@ void GameEngine::InitializeTTF()
         throw std::runtime_error("InitializeTTF(): Couldn't initialize TTF" + errMsg);
     }
 
-    std::string fontFile = constants::gResPath + "\\fonts\\coure.fon";
-    int fontSize = 48;
+    std::string fontFile = constants::gResPath + "\\fonts\\alagard.ttf";
+    int fontSize = 64;
     font = TTF_OpenFont(fontFile.c_str(), fontSize);
+    for(int i = 0; i < 10; i++)
+    {
+        int fontSz = 8 * (i + 1);
+        TTF_Font *f = TTF_OpenFont(fontFile.c_str(), fontSz);
+        
+        if(!f)
+        {
+            std::string errMsg = SDL_GetError();
+            throw std::runtime_error("InitializeTTF(): Couldn't Open font " + fontFile + ": " + errMsg);
+        }
+
+        fontMap[i] = f;
+    }
+
     if(!font)
     {
         std::string errMsg = SDL_GetError();

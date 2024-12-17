@@ -7,7 +7,7 @@ TextFragment* TextFragment::GetInstance(Vec2i pos, Vec2i sz, std::string txt, SD
 
 TextFragment::TextFragment(Vec2i pos, Vec2i sz, std::string txt, SDL_Color col) : MovableSprite(), textFragDestRect{pos.x, pos.y, sz.x, sz.y}, color(col)
 {
-    SDL_Surface* surface = TTF_RenderText_Solid(gameEngine.GetFont(), txt.c_str(), color);
+    SDL_Surface* surface = TTF_RenderText_Solid(gameEngine.GetFont(3), txt.c_str(), color);
     
     if(textTexture)
         SDL_DestroyTexture(textTexture);

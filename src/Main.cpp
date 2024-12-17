@@ -98,8 +98,6 @@ class Player : public MovableSprite
                 speed = {0,0};
             }
             AnimateSprite({0, 0}, {32, 80}, 4, 5);
-            static int frameTick = 0;
-
 
             if(gameEngine.GetKeyPressedOnce('b'))
             {
@@ -137,96 +135,81 @@ class Player : public MovableSprite
 class Timer : public TextFragment
 {
     public:
-        Timer(Vec2i p, Vec2i sz, std::string txt, SDL_Color c) : TextFragment(p, sz, txt, c)
-        {}
+        Timer(Vec2i p, SDL_Color c, double timeCap) : TextFragment(p, {1,1}, " ", c), 
+            fTimeCap(timeCap), fCurrentTime(timeCap)
+        {
+        }
 
         void Tick()
         {
-            currentTime = SDL_GetTicks();
-            fTimeElapsed = currentTime / 1000.0f;
-            strElapsedTime = "Time: " + std::to_string(fTimeElapsed);
-            SetText(strElapsedTime);
-            if(gameEngine.GetKeyPressed(SDLK_SPACE))
+            if(!started)
             {
-                /*
-                    double currentTime = StartTimer(10.0);
-                
-                    StartTime(double timeCap)
-                    {
-                        // originStartTime måste sättas i en fast variabel,
-                        // som originStartTime = fTimeElapsed;
-                        InitializeTimer();
-                        double currentTime = timeCap - (fTimeElapsed - originStartTime);
-                        return currentTime;
-                    }
-                */
+                fOriginTime = gameEngine.GetTimeElapsed();
+                started = true;
             }
+
+            if(fCurrentTime > 0.0f)
+                fCurrentTime = fTimeCap - (gameEngine.GetTimeElapsed() - fOriginTime);
+            else
+                fCurrentTime = 0.0f;
+            char str[10] = {};
+            char time[64] = "Time: ";
+            sprintf(str, "%0.2f", fCurrentTime);
+            strcat(time, str);
+            SetText(time);
         }
 
     private:
-        Uint32 currentTime;
-        double fTimeElapsed = 0.0f;
-        std::string strElapsedTime;
+        std::string strCurrentTime;
+        double fTimeCap, fCurrentTime, fOriginTime = 0.0f;
+        bool started = false;
 };
 
-class MenuButton : public Button
+class UIButton : public Button
 {
     public: 
-        MenuButton(Vec2i p, Vec2i sz, std::string srcImage) : Button(p, sz, srcImage)
+        UIButton(Vec2i p, Vec2i sz, std::string srcImage, Vec2i normCoord, Vec2i hovCoord, Vec2i pressCoord, Vec2i texSize, void(*releaseCmd)()) : Button(p, sz, srcImage), 
+            normalTexCoord(normCoord), hoverTexCoord(hovCoord), pressTexCoord(pressCoord), spriteTexSize(texSize), OnRealeaseCommand(releaseCmd)
         {
-            if(GetNameTag() == "startButton")
-                SetSpriteRegion({0, 0}, {800, 600});
-            else if(GetNameTag() == "screitsButton")
-                SetSpriteRegion({0, 600}, {800, 600});
-            else if(GetNameTag() == "quitButton")
-                SetSpriteRegion({0, 1200}, {800, 600});
+            SetSpriteRegion(normalTexCoord, spriteTexSize);
         }
 
         void OnMouseEnter()
         {
-            if(GetNameTag() == "startButton")
-                SetSpriteRegion({800, 0}, {800, 600});
-            else if(GetNameTag() == "creditsButton")
-                SetSpriteRegion({800, 600}, {800, 600});
-            else if(GetNameTag() == "quitButton")
-                SetSpriteRegion({800, 1200}, {800, 600});      
+            SetSpriteRegion(hoverTexCoord, spriteTexSize);
         }
 
         void OnMouseExit()
         {
-            if(GetNameTag() == "startButton")
-                SetSpriteRegion({0, 0}, {800, 600});
-            else if(GetNameTag() == "creditsButton")
-                SetSpriteRegion({0, 600}, {800, 600});
-            else if(GetNameTag() == "quitButton")
-                SetSpriteRegion({0, 1200}, {800, 600});
+            SetSpriteRegion(normalTexCoord, spriteTexSize);
         }
 
         void OnMousePress()
         {
-            if(GetNameTag() == "startButton")
-                SetSpriteRegion({1600, 0}, {800, 600});
-            else if(GetNameTag() == "creditsButton")
-                SetSpriteRegion({1600, 600}, {800, 600});
-            else if(GetNameTag() == "quitButton")
-                SetSpriteRegion({1600, 1200}, {800, 600});   
+            SetSpriteRegion(pressTexCoord, spriteTexSize);
         }
 
         void OnMouseRelease()
         {
-            if(GetNameTag() == "startButton")
-                gameEngine.LoadLevel(1); 
-            else if(GetNameTag() == "creditsButton")
-                gameEngine.LoadLevel(2);
-            else if(GetNameTag() == "quitButton")
-                gameEngine.QuitEngine();
+            OnRealeaseCommand();        
         }
 
     private:
-        bool mouseHover = false, wasPressed = false;  
+        Vec2i normalTexCoord, hoverTexCoord, pressTexCoord;
+        Vec2i spriteTexSize;
+        void(*OnRealeaseCommand)();  
+
 };
 
-Level* levelMainMenu = Level::GetInstance(0);
+void LoadStarGame() { gameEngine.LoadLevel(1); }
+void LoadCredits()  { gameEngine.LoadLevel(2); }
+void QuitGame()     { gameEngine.QuitEngine(); }
+void Back()         
+{ 
+    if(gameEngine.GetCurrentLevelIndex() == 2)
+        gameEngine.LoadLevel(0);
+}
+
 void ChangeLevel()
 {
     switch(gameEngine.GetCurrentLevelIndex())
@@ -251,10 +234,19 @@ int main(int argv, char **argc)
     gameEngine.LoadSound("release", "release.wav");
     gameEngine.LoadMusic("mainTheme", "mainTheme.wav");
     gameEngine.PlayMusic("mainTheme", 3);
+    
+    Level* levelMainMenu = Level::GetInstance(0);
+    Level* levelStartGame = Level::GetInstance(1);
+    Level* levelCredits = Level::GetInstance(2);
+
+ 
     Sprite* mainMenuBkg = StaticSprite::GetInstance({0, 0}, {gameEngine.GetWindowSize().x, gameEngine.GetWindowSize().y}, "MainMenuBackground.png");
     
     TextFragment* text1 = TextFragment::GetInstance({100, 100}, {100, 100}, "player 1", {255, 0, 0, 255});
     TextFragment* text2 = TextFragment::GetInstance({100, 100}, {100, 100}, "player 2", {255, 0, 0, 255});
+    TextFragment* credits1 = TextFragment::GetInstance({(gameEngine.GetWindowSize().x / 2) - 150, 150}, {100, 100}, "CREDITS", {255, 0, 0, 255});
+    TextFragment* credits2 = TextFragment::GetInstance({(gameEngine.GetWindowSize().x / 2) - 170, 250}, {100, 100}, "A Game made by", {255, 0, 0, 255});
+    TextFragment* credits3 = TextFragment::GetInstance({(gameEngine.GetWindowSize().x / 2) - 200, 350}, {100, 100}, "Carl-Johan Larson Eliasson", {255, 0, 0, 255});
 
     Player* player = new Player({100,100}, {50, 100}, "PersonIdle_Small.png", text1);
     player->SetTag("player");
@@ -269,38 +261,35 @@ int main(int argv, char **argc)
     player2->InstallCollider2D({player2->GetDestRect().x, player2->GetDestRect().y + 3*(player2->GetDestRect().h / 4),
                                 player2->GetDestRect().w, player2->GetDestRect().h / 4}, false);
 
-
-    Timer* timer = new Timer({300, 300}, {100, 100}, "Timer", {0, 255, 0, 255});
+    Timer* timer10 = new Timer({gameEngine.GetWindowSize().x / 2, 50}, {0, 255, 0, 255}, 10.0f);
+    
     
     TextField* tf1 = TextField::GetInstance({500, 300}, {255, 0, 0, 255});
     TextField* tf2 = TextField::GetInstance({500, 400}, {0, 0, 255, 255});
 
-    TextFragment* tfStartGame = TextFragment::GetInstance({600, 600}, {100, 100}, "START GAME", {255, 0, 255, 255});
-    Button* startButton = new MenuButton({500, 350}, {200, 100}, "MenuButtons.png");
-    startButton->SetTag("startButton");
-    Button* creditsButton = new MenuButton({500, 500}, {200, 100}, "MenuButtons.png");
-    creditsButton->SetTag("creditsButton");
-    Button* quitButton = new MenuButton({500, 650}, {200, 100}, "MenuButtons.png");
-    quitButton->SetTag("quitButton");
-
-    Level* level2 = Level::GetInstance(1);
+    Button* _startButton    = new UIButton({500, 350}, {200, 100}, "MenuButtons.png", {0, 0},    {800, 0},    {1600, 0},    {800, 600}, LoadStarGame);
+    Button* _creditsButton  = new UIButton({500, 500}, {200, 100}, "MenuButtons.png", {0, 600},  {800, 600},  {1600, 600},  {800, 600}, LoadCredits);
+    Button* _quitButton     = new UIButton({500, 650}, {200, 100}, "MenuButtons.png", {0, 1200}, {800, 1200}, {1600, 1200}, {800, 600}, QuitGame);
+    Button* _backButton     = new UIButton({500, 650}, {200, 100}, "MenuButtons.png", {0, 1800}, {800, 1800}, {1600, 1800}, {800, 600}, Back);
     
     levelMainMenu->AddSprite(mainMenuBkg);
-    levelMainMenu->AddSprite(startButton);
-    levelMainMenu->AddSprite(creditsButton);
-    levelMainMenu->AddSprite(quitButton);
-    levelMainMenu->AddSprite(tfStartGame);
-    level2->AddSprite(tf1);
-    level2->AddSprite(tf2);
-    level2->AddSprite(player);
-    level2->AddSprite(player2);
-    level2->AddSprite(text1);
-    level2->AddSprite(timer);
-    level2->AddSprite(timer);
-    
+    levelMainMenu->AddSprite(_startButton);
+    levelMainMenu->AddSprite(_creditsButton);
+    levelMainMenu->AddSprite(_quitButton);
+    levelStartGame->AddSprite(tf1);
+    levelStartGame->AddSprite(tf2);
+    levelStartGame->AddSprite(player);
+    levelStartGame->AddSprite(player2);
+    levelStartGame->AddSprite(text1);
+    levelStartGame->AddSprite(timer10);
+    levelCredits->AddSprite(_backButton);
+    levelCredits->AddSprite(credits1);
+    levelCredits->AddSprite(credits2);
+    levelCredits->AddSprite(credits3);
 
     gameEngine.AddLevel(levelMainMenu);
-    gameEngine.AddLevel(level2);
+    gameEngine.AddLevel(levelCredits);
+    gameEngine.AddLevel(levelStartGame);
     gameEngine.RegisterKeyCallback('l', ChangeLevel);
 
 
