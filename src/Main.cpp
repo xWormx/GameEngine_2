@@ -53,6 +53,8 @@ class Particle : public MovableSprite
                 for(int i = 0; i < 5; i ++)
                 {
                     Explosion* p = new Explosion({GetDestRect().x, GetDestRect().y}, {16,16}, "Particle.png");
+                    p->SetTag("explosion");
+                    p->InstallCollider2D(p->GetDestRect(), false);
                     gameEngine.GetCurrentLevel()->AddSprite(p);
                     gameEngine.PlaySound("release", 5);
                 }
@@ -104,6 +106,7 @@ class Player : public MovableSprite
                 if(GetNameTag() == "player")
                 {
                     Particle* p = new Particle({GetDestRect().x, GetDestRect().y}, {32,16}, "BulletTest.png");
+                    p->SetTag("particleShot");
                     SDL_Rect bounds = p->GetDestRect();
                     p->InstallCollider2D(bounds, false);
                     gameEngine.GetCurrentLevel()->AddSprite(p);
@@ -129,8 +132,6 @@ class Player : public MovableSprite
         int leftKey, rightKey, upKey, downKey;
         
 };
-
-
 
 class Timer : public TextFragment
 {
@@ -158,6 +159,9 @@ class Timer : public TextFragment
             strcat(time, str);
             SetText(time);
         }
+
+        const double& GetCurrentTime() { return fCurrentTime; }
+        const double& GetTimeCap() { return fTimeCap; }
 
     private:
         std::string strCurrentTime;
@@ -210,20 +214,64 @@ void Back()
         gameEngine.LoadLevel(0);
 }
 
-void ChangeLevel()
+class Enemy : public MovableSprite
 {
-    switch(gameEngine.GetCurrentLevelIndex())
-    {
-        case 0:
+    public:
+        Enemy(Vec2i p, Vec2i sz, std::string srcImage, Vec2i speed) : MovableSprite(p, sz, srcImage), movSpeed(speed)
+        {
+        }
+
+        void Tick()
+        {
+            AnimateSprite({0,0}, {100, 100}, 5, 3);
+            Move(movSpeed);
+        }
+
+        void OnCollision2D(Sprite* other)
+        {
+            if(other->GetNameTag() == "particleShot" || other->GetNameTag() == "explosion")
+                gameEngine.GetCurrentLevel()->RemoveSprite(this);
+        }
+
+        private:
+            Vec2i movSpeed;
+};
+
+class EnemyHandler : public StaticSprite
+{
+    public:
+        EnemyHandler(Level* lvl) : level(lvl)
+        {
+            enemyTimer = new Timer({400, 50}, {0, 255, 0, 255}, 60.0f, 5);
+            level->AddSprite(enemyTimer);
+            timeIntervalStep = enemyTimer->GetTimeCap();
+        }
+
+        void Tick()
+        {
+            if(enemyTimer->GetCurrentTime() <= timeIntervalStep)
             {
-                gameEngine.LoadLevel(1);
-            } break;
-        case 1:
-            {   
-                gameEngine.LoadLevel(0);
-            } break;
-    }
-}
+                timeIntervalStep -= stepSpeed;
+                if(timeIntervalStep < (enemyTimer->GetTimeCap() / 6.0f))
+                    stepSpeed = 1.0f;
+                else if(timeIntervalStep < enemyTimer->GetTimeCap() / 2.0f)
+                    stepSpeed = 2.0f;
+
+                int ry = gameEngine.GetRandomNumberInRange(150, 800);
+                Enemy* enemy = new Enemy({gameEngine.GetWindowSize().x, ry}, {150, 150}, "EnemySheet.png", {-1, 0});
+                SDL_Rect bounds = enemy->GetDestRect();
+                enemy->InstallCollider2D(bounds, false);
+                level->AddSprite(enemy);
+            }
+
+        }
+
+    private:
+        Level* level;
+        Timer* enemyTimer;
+        double timeIntervalStep;
+        double stepSpeed = 5.0f;
+};
 
 int main(int argv, char **argc)
 {
@@ -261,28 +309,25 @@ int main(int argv, char **argc)
     player2->InstallCollider2D({player2->GetDestRect().x, player2->GetDestRect().y + 3*(player2->GetDestRect().h / 4),
                                 player2->GetDestRect().w, player2->GetDestRect().h / 4}, false);
 
-    Timer* timer10 = new Timer({gameEngine.GetWindowSize().x / 2, 50}, {0, 255, 0, 255}, 10.0f, 5);
-    
-    
     TextField* tf1 = TextField::GetInstance({500, 300}, {255, 0, 0, 255}, 8);
-    TextField* tf2 = TextField::GetInstance({500, 400}, {0, 0, 255, 255}, 2);
 
     Button* _startButton    = new UIButton({500, 350}, {200, 100}, "MenuButtons.png", {0, 0},    {800, 0},    {1600, 0},    {800, 600}, LoadStarGame);
     Button* _creditsButton  = new UIButton({500, 500}, {200, 100}, "MenuButtons.png", {0, 600},  {800, 600},  {1600, 600},  {800, 600}, LoadCredits);
     Button* _quitButton     = new UIButton({500, 650}, {200, 100}, "MenuButtons.png", {0, 1200}, {800, 1200}, {1600, 1200}, {800, 600}, QuitGame);
     Button* _backButton     = new UIButton({500, 650}, {200, 100}, "MenuButtons.png", {0, 1800}, {800, 1800}, {1600, 1800}, {800, 600}, Back);
     
+    EnemyHandler enemyHandler(levelStartGame);
+   
     levelMainMenu->AddSprite(mainMenuBkg);
     levelMainMenu->AddSprite(_startButton);
     levelMainMenu->AddSprite(_creditsButton);
     levelMainMenu->AddSprite(_quitButton);
     levelStartGame->AddSprite(tf1);
-    levelStartGame->AddSprite(tf2);
     levelStartGame->AddSprite(player);
     levelStartGame->AddSprite(player2);
     levelStartGame->AddSprite(text1);
     levelStartGame->AddSprite(text2);
-    levelStartGame->AddSprite(timer10);
+    levelStartGame->AddSprite(&enemyHandler);
     levelCredits->AddSprite(_backButton);
     levelCredits->AddSprite(credits1);
     levelCredits->AddSprite(credits2);
@@ -291,9 +336,7 @@ int main(int argv, char **argc)
     gameEngine.AddLevel(levelMainMenu);
     gameEngine.AddLevel(levelCredits);
     gameEngine.AddLevel(levelStartGame);
-    gameEngine.RegisterKeyCallback('l', ChangeLevel);
-
-
+    
     gameEngine.Run();
 
     return 0;

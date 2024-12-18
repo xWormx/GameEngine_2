@@ -13,6 +13,7 @@ class StaticSprite : public Sprite
 
     protected:
         StaticSprite(Vec2i p, Vec2i sz, std::string srcImage);
+        StaticSprite(){}
 };
 
 

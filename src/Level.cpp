@@ -26,6 +26,10 @@ void Level::AddSprite(Sprite* s)
 
 void Level::RemoveSprite(Sprite* s)
 {
+    for(Sprite* existingSprite : removed)
+        if(existingSprite == s) 
+            return;
+        
     removed.push_back(s);
 }
 

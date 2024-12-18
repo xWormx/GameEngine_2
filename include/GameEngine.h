@@ -67,7 +67,7 @@ class GameEngine
         bool GetMousePressed(const int keyCode) const { return inputComponent.GetMousePressed(keyCode); }
 
         const Vec2i GetWindowSize();
-        const Vec2i GetMousePosition();
+        const Vec2i& GetMousePosition();
         const double GetDeltaTime() { return fDeltaTime; }
         const double GetTimeElapsed() { return fTimeElapsed; }
         SDL_Renderer* GetRenderer() {return renderer;}
@@ -105,6 +105,7 @@ class GameEngine
         std::string strTextInput = "";
         bool textInputRecieved;
 
+        Vec2i mousePosition = {};
         InputComponent inputComponent;
 
         bool loadLevelRequested;
@@ -114,8 +115,6 @@ class GameEngine
 
         std::unordered_map<SDL_Keycode, std::vector<void(*)()>> keyCallbacks;
         std::unordered_map<SDL_Keycode, std::vector<std::function<void()>>> memberKeyCallbacks;
-
-
 
         std::unordered_map<std::string, Mix_Chunk*> soundMap;
         std::unordered_map<std::string, Mix_Music*> musicMap;

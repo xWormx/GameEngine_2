@@ -62,7 +62,7 @@ void GameEngine::SetFps(unsigned int fps)
 
 void GameEngine::HandleEvents()
 {
-    if(SDL_PollEvent(&event))
+    while(SDL_PollEvent(&event))
     {
         switch(event.type)
         {
@@ -93,6 +93,12 @@ void GameEngine::HandleEvents()
                 {
                     HandleMouseUpEvents(event);
                 } break;
+            case SDL_MOUSEMOTION:
+            {
+                mousePosition.x = event.motion.x;
+                mousePosition.y = event.motion.y;
+            }break;
+
             case SDL_TEXTINPUT:
                 {
                     textInputRecieved = true;
@@ -294,14 +300,9 @@ const Vec2i GameEngine::GetWindowSize()
     return size;
 }
 
-const Vec2i GameEngine::GetMousePosition()
+const Vec2i& GameEngine::GetMousePosition()
 {
-    Vec2i p = {};
-
-    SDL_GetMouseState(&p.x, &p.y);
-    
-    return p;
-
+    return mousePosition;
 }
 
 void GameEngine::InitializeSDL()
