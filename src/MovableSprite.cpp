@@ -57,6 +57,17 @@ void MovableSprite::SetSpriteRegion(Vec2i p, Vec2i sz)
     movableSrcRect.h = sz.y;
 }
 
+void MovableSprite::AdjustSize(Vec2i s)
+{
+    movableDestRect.w += s.x; 
+    movableDestRect.h += s.y;
+}
+
+void MovableSprite::SetColor(SDL_Color c)
+{
+    SDL_SetTextureColorMod(movableTexture, c.r, c.g, c.b);
+}
+
 int MovableSprite::AnimateSprite(Vec2i frameStart, Vec2i frameSize, unsigned int maxFrames, unsigned int animDelay)
 {
     if(animDelay == 0)

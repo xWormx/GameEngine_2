@@ -13,6 +13,10 @@ class MovableSprite : public Sprite
         const virtual SDL_Rect& GetDestRect() {return movableDestRect; }
         const virtual SDL_Rect& GetSrcRect() {return movableSrcRect; }
         void SetSpriteRegion(Vec2i p, Vec2i sz);
+        void AdjustSize(Vec2i s);
+        void SetColor(SDL_Color c);
+        void SetPosition(Vec2i p) { movableDestRect.x = p.x; movableDestRect.y = p.y; }
+        void SetSize(Vec2i sz) { movableDestRect.w = sz.x; movableDestRect.h = sz.y; }
         int AnimateSprite(Vec2i frameStart, Vec2i frameSize, unsigned int maxFrames, unsigned int animSpeed);
         
         virtual void Move(Vec2i& movement); 

@@ -56,7 +56,7 @@ class Particle : public MovableSprite
                     p->SetTag("explosion");
                     p->InstallCollider2D(p->GetDestRect(), false);
                     gameEngine.GetCurrentLevel()->AddSprite(p);
-                    gameEngine.PlaySound("release", 5);
+                    gameEngine.PlaySound("release", 1);
                 }
                 gameEngine.GetCurrentLevel()->RemoveSprite(this);
             }
@@ -71,11 +71,69 @@ class Particle : public MovableSprite
         Vec2i velocity;
 };
 
+class HealthBar : public MovableSprite
+{
+    public:
+        HealthBar(Vec2i p, Vec2i sz, std::string srcImage, int maxHP) : MovableSprite(p, sz, srcImage),
+                    maxHealth(maxHP), currentHealth(maxHP)
+        {
+            background = MovableSprite::GetInstance(p, sz, srcImage);
+            gameEngine.GetLevelAtIndex(1)->AddSprite(background);
+        }
+
+        void ApplyDamage(int damageAmount) 
+        { 
+            currentHealth -= damageAmount; 
+            if(currentHealth < 0)
+                currentHealth = 0;
+            
+            double percentageToAdjust = (double)currentHealth / (double)maxHealth;
+            // Multiplicera med background för att den inte ändras.
+            double adjustWidth = (double)background->GetDestRect().w * percentageToAdjust;
+            SetSize({(int)adjustWidth, background->GetDestRect().h});
+            
+        }
+
+        void ApplyHealing(int healingAmount) 
+        { 
+            if(currentHealth < maxHealth)
+                currentHealth += healingAmount; 
+            if(currentHealth > maxHealth)
+                currentHealth = maxHealth;
+        }
+
+        void MoveBar(Vec2i speed)
+        {
+            Move(speed);
+            background->Move(speed);
+        }
+
+        void DeleteBar()
+        {
+            gameEngine.GetCurrentLevel()->RemoveSprite(background);
+            gameEngine.GetCurrentLevel()->RemoveSprite(this);
+        }
+
+        int GetCurrentHealth() { return currentHealth; }
+
+        ~HealthBar()
+        {           
+        }
+
+    private:
+        int maxHealth, currentHealth;
+        MovableSprite* background;
+};
+
 class Player : public MovableSprite
 {
     public:
-        Player(Vec2i p, Vec2i sz, std::string srcImage, TextFragment* tfName) : MovableSprite(p, sz, srcImage), name(tfName)
+        Player(Vec2i p, Vec2i sz, std::string srcImage, TextFragment* tfName, int health) : MovableSprite(p, sz, srcImage), 
+                name(tfName)
         {
+            healthBar = new HealthBar({p.x - 30, p.y - 30}, {100, 10}, "HealthBar.png", health); 
+            healthBar->SetColor({255, 0, 0, 255});
+            gameEngine.GetLevelAtIndex(1)->AddSprite(healthBar);
         }
 
         void Tick()
@@ -97,20 +155,35 @@ class Player : public MovableSprite
             {
                 Move(speed);
                 name->Move(speed);
+                healthBar->MoveBar(speed);
                 speed = {0,0};
             }
             AnimateSprite({0, 0}, {32, 80}, 4, 5);
 
-            if(gameEngine.GetKeyPressedOnce('b'))
+            if(gameEngine.GetKeyPressedOnce('p'))
             {
-                if(GetNameTag() == "player")
+                if(GetNameTag() == "player1")
                 {
                     Particle* p = new Particle({GetDestRect().x, GetDestRect().y}, {32,16}, "BulletTest.png");
                     p->SetTag("particleShot");
                     SDL_Rect bounds = p->GetDestRect();
                     p->InstallCollider2D(bounds, false);
                     gameEngine.GetCurrentLevel()->AddSprite(p);
-                    gameEngine.PlaySound("shot", 6);
+                    gameEngine.PlaySound("shot", 3);
+                }
+            }
+
+            
+            if(gameEngine.GetKeyPressedOnce('b'))
+            {
+                if(GetNameTag() == "player2")
+                {
+                    Particle* p = new Particle({GetDestRect().x, GetDestRect().y}, {32,16}, "BulletTest.png");
+                    p->SetTag("particleShot");
+                    SDL_Rect bounds = p->GetDestRect();
+                    p->InstallCollider2D(bounds, false);
+                    gameEngine.GetCurrentLevel()->AddSprite(p);
+                    gameEngine.PlaySound("shot", 3);
                 }
             }
 
@@ -130,6 +203,7 @@ class Player : public MovableSprite
         TextFragment* name;
         bool shooting = false;
         int leftKey, rightKey, upKey, downKey;
+        HealthBar* healthBar;
         
 };
 
@@ -206,35 +280,59 @@ class UIButton : public Button
 };
 
 void LoadStarGame() { gameEngine.LoadLevel(1); }
+void LoadChooseName() { gameEngine.LoadLevel(3); }
 void LoadCredits()  { gameEngine.LoadLevel(2); }
 void QuitGame()     { gameEngine.QuitEngine(); }
 void Back()         
 { 
     if(gameEngine.GetCurrentLevelIndex() == 2)
         gameEngine.LoadLevel(0);
+    else if(gameEngine.GetCurrentLevelIndex() == 3)
+        gameEngine.LoadLevel(0);
 }
 
 class Enemy : public MovableSprite
 {
     public:
-        Enemy(Vec2i p, Vec2i sz, std::string srcImage, Vec2i speed) : MovableSprite(p, sz, srcImage), movSpeed(speed)
+        Enemy(Vec2i p, Vec2i sz, std::string srcImage, Vec2i speed, int health) : MovableSprite(p, sz, srcImage), movSpeed(speed)
         {
+            healthBar = new HealthBar({p.x, p.y + 50}, {sz.x, 10}, "HealthBar.png", health); 
+            healthBar->SetColor({255, 0, 0, 255});
+            // Detta funkar bara nu när fiender spawnas efter ett tag
+            // För currentLevel från början är main menu.
+            gameEngine.GetCurrentLevel()->AddSprite(healthBar);
         }
 
         void Tick()
         {
             AnimateSprite({0,0}, {100, 100}, 5, 3);
             Move(movSpeed);
+            healthBar->MoveBar(movSpeed);
         }
 
         void OnCollision2D(Sprite* other)
         {
             if(other->GetNameTag() == "particleShot" || other->GetNameTag() == "explosion")
-                gameEngine.GetCurrentLevel()->RemoveSprite(this);
+            {
+                gameEngine.GetCurrentLevel()->RemoveSprite(other);
+                healthBar->ApplyDamage(1);
+                if(healthBar->GetCurrentHealth() <= 0)
+                {
+                    gameEngine.GetCurrentLevel()->RemoveSprite(this);
+                    healthBar->DeleteBar();
+                }
+                    
+            }
+                
+        }
+
+        ~Enemy()
+        {
         }
 
         private:
             Vec2i movSpeed;
+            HealthBar* healthBar;
 };
 
 class EnemyHandler : public StaticSprite
@@ -258,8 +356,10 @@ class EnemyHandler : public StaticSprite
                     stepSpeed = 2.0f;
 
                 int ry = gameEngine.GetRandomNumberInRange(150, 800);
-                Enemy* enemy = new Enemy({gameEngine.GetWindowSize().x, ry}, {150, 150}, "EnemySheet.png", {-1, 0});
-                SDL_Rect bounds = enemy->GetDestRect();
+                Enemy* enemy = new Enemy({gameEngine.GetWindowSize().x, ry}, {150, 150}, "EnemySheet.png", {-1, 0}, 15);
+                SDL_Rect rect = enemy->GetDestRect();
+                SDL_Rect bounds = {rect.x + 30, rect.y + (rect.h / 2), 
+                                    60, rect.h / 2};
                 enemy->InstallCollider2D(bounds, false);
                 level->AddSprite(enemy);
             }
@@ -283,10 +383,20 @@ int main(int argv, char **argc)
     gameEngine.LoadMusic("mainTheme", "mainTheme.wav");
     gameEngine.PlayMusic("mainTheme", 3);
     
+
+    // TODO: Ändra så att GetLevelAtIndex returnerar den leveln som har i som sitt interna index,
+    // nu levererar den arrayen levels index vilket gör det hela beroende på vilken ordningen
+    // gameEngine.AddLevel(somelevel); sker!!
     Level* levelMainMenu = Level::GetInstance(0);
     Level* levelStartGame = Level::GetInstance(1);
     Level* levelCredits = Level::GetInstance(2);
+    Level* levelChooseName = Level::GetInstance(3);
 
+    gameEngine.AddLevel(levelMainMenu);
+    gameEngine.AddLevel(levelStartGame);
+    gameEngine.AddLevel(levelCredits);
+    gameEngine.AddLevel(levelChooseName);
+    
  
     Sprite* mainMenuBkg = StaticSprite::GetInstance({0, 0}, {gameEngine.GetWindowSize().x, gameEngine.GetWindowSize().y}, "MainMenuBackground.png");
     
@@ -296,47 +406,51 @@ int main(int argv, char **argc)
     TextFragment* credits2 = TextFragment::GetInstance({(gameEngine.GetWindowSize().x / 2) - 170, 250}, {100, 100}, "A Game made by", {255, 0, 0, 255}, 3);
     TextFragment* credits3 = TextFragment::GetInstance({(gameEngine.GetWindowSize().x / 2) - 200, 350}, {100, 100}, "Carl-Johan Larson Eliasson", {255, 0, 0, 255}, 4);
 
-    Player* player = new Player({100,100}, {50, 100}, "PersonIdle_Small.png", text1);
-    player->SetTag("player");
+    Player* player = new Player({100,100}, {50, 100}, "PersonIdle_Small.png", text1, 50);
+    player->SetTag("player1");
     player->SetMovementKeys(SDLK_LEFT, SDLK_RIGHT, SDLK_UP, SDLK_DOWN);
     player->InstallCollider2D({player->GetDestRect().x, player->GetDestRect().y + 3*(player->GetDestRect().h / 4),
                                 player->GetDestRect().w, player->GetDestRect().h / 4}, false);
 
 
-    Player* player2 = new Player({100,100}, {30, 80}, "PersonIdle_Small.png", text2);
-    player2->SetTag("player TWO");
+    Player* player2 = new Player({100,100}, {30, 80}, "PersonIdle_Small.png", text2, 30);
+    player2->SetTag("player2");
     player2->SetMovementKeys('a', 'd', 'w', 's');
     player2->InstallCollider2D({player2->GetDestRect().x, player2->GetDestRect().y + 3*(player2->GetDestRect().h / 4),
                                 player2->GetDestRect().w, player2->GetDestRect().h / 4}, false);
 
-    TextField* tf1 = TextField::GetInstance({500, 300}, {255, 0, 0, 255}, 8);
-
-    Button* _startButton    = new UIButton({500, 350}, {200, 100}, "MenuButtons.png", {0, 0},    {800, 0},    {1600, 0},    {800, 600}, LoadStarGame);
+    TextField* tf1 = TextField::GetInstance({300, 405}, {100, 255, 100, 255}, 6);
+    StaticSprite* textFieldBkg = StaticSprite::GetInstance({300, 400}, {700, 60}, "TextField.png");
+    Button* _newGameButton    = new UIButton({500, 350}, {200, 100}, "MenuButtons.png", {0, 0},    {800, 0},    {1600, 0},    {800, 600}, LoadChooseName);
+    Button* _startButton    = new UIButton({200, 650}, {200, 100}, "MenuButtons.png", {0, 0},    {800, 0},    {1600, 0},    {800, 600}, LoadStarGame);
     Button* _creditsButton  = new UIButton({500, 500}, {200, 100}, "MenuButtons.png", {0, 600},  {800, 600},  {1600, 600},  {800, 600}, LoadCredits);
     Button* _quitButton     = new UIButton({500, 650}, {200, 100}, "MenuButtons.png", {0, 1200}, {800, 1200}, {1600, 1200}, {800, 600}, QuitGame);
-    Button* _backButton     = new UIButton({500, 650}, {200, 100}, "MenuButtons.png", {0, 1800}, {800, 1800}, {1600, 1800}, {800, 600}, Back);
+    Button* _backButton     = new UIButton({800, 650}, {200, 100}, "MenuButtons.png", {0, 1800}, {800, 1800}, {1600, 1800}, {800, 600}, Back);
     
     EnemyHandler enemyHandler(levelStartGame);
    
     levelMainMenu->AddSprite(mainMenuBkg);
-    levelMainMenu->AddSprite(_startButton);
+    levelMainMenu->AddSprite(_newGameButton);
     levelMainMenu->AddSprite(_creditsButton);
     levelMainMenu->AddSprite(_quitButton);
-    levelStartGame->AddSprite(tf1);
+
     levelStartGame->AddSprite(player);
     levelStartGame->AddSprite(player2);
     levelStartGame->AddSprite(text1);
     levelStartGame->AddSprite(text2);
     levelStartGame->AddSprite(&enemyHandler);
+    
     levelCredits->AddSprite(_backButton);
     levelCredits->AddSprite(credits1);
     levelCredits->AddSprite(credits2);
     levelCredits->AddSprite(credits3);
-
-    gameEngine.AddLevel(levelMainMenu);
-    gameEngine.AddLevel(levelCredits);
-    gameEngine.AddLevel(levelStartGame);
     
+    levelChooseName->AddSprite(mainMenuBkg);
+    levelChooseName->AddSprite(textFieldBkg);
+    levelChooseName->AddSprite(tf1);
+    levelChooseName->AddSprite(_startButton);
+    levelChooseName->AddSprite(_backButton);
+
     gameEngine.Run();
 
     return 0;

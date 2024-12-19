@@ -49,7 +49,9 @@ class GameEngine
         void LoadLevel(unsigned int levelIndex);
         void SetCurrentLevel();
         const unsigned int GetCurrentLevelIndex();
+        Level* GetLevelAtIndex(int i) { return levels.at(i); }
         Level* GetCurrentLevel() {return currentLevel;}
+
 
         void LoadSound(std::string nameKey, std::string srcPath);
         void PlaySound(std::string keyName, int volume);

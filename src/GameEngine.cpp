@@ -362,7 +362,7 @@ void GameEngine::InitializeMixer()
     if(result != 0)
         throw std::runtime_error("InitializeMixer(): Failed to Open Audio " + errMsg);
     
-    Mix_AllocateChannels(128);
+    Mix_AllocateChannels(256);
 }
 
 
