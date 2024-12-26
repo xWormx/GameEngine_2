@@ -152,6 +152,7 @@ class Player : public MovableSprite
         }
         
         TextFragment* GetName() { return name; }
+        int GetPoints() { return iPoints; }
 
         void IncreasePoints(int points) { iPoints += points; pointIncreased = true;}
         void UpdatePoints()
@@ -218,7 +219,9 @@ class Player : public MovableSprite
 
         void OnCollision2D(Sprite* other)
         {
+
         }
+
     private:
         Vec2i speed = {};
         TextFragment* name;
@@ -333,6 +336,11 @@ class Enemy : public MovableSprite
             AnimateSprite({0,0}, {100, 100}, 5, 3);
             Move(movSpeed);
             healthBar->MoveBar(movSpeed);
+            int leftSide = GetDestRect().x + GetDestRect().w;
+            if(leftSide < 0)
+            {
+                escaped = true;
+            }
         }
 
         void OnCollision2D(Sprite* other)
@@ -341,17 +349,27 @@ class Enemy : public MovableSprite
             {
                 gameEngine.GetCurrentLevel()->RemoveSprite(other);
                 healthBar->ApplyDamage(1);
+
                 if(healthBar->GetCurrentHealth() <= 0)
                 {
                     Particle* p = dynamic_cast<Particle*>(other);
                     Explosion* e = dynamic_cast<Explosion*>(other);
-                    if(p)
-                        p->GetOwner()->IncreasePoints(1);
-                    else if(e)
-                        e->GetOwner()->IncreasePoints(1);
 
-                    gameEngine.GetCurrentLevel()->RemoveSprite(this);
-                    healthBar->DeleteBar();
+                    // dead är till för att en död fiende inte ger poäng mer än 1 gång när den dör
+                    // om partiklar och explosioner colliderar under samma frame.
+                    if(!dead)
+                    {
+                        dead = true;
+                        if(p)
+                            p->GetOwner()->IncreasePoints(1);
+                        else if(e)
+                            e->GetOwner()->IncreasePoints(1);
+                        
+                        
+                        gameEngine.GetCurrentLevel()->RemoveSprite(this);
+                        healthBar->DeleteBar();
+                    }
+
                 }
             }
         }
@@ -360,48 +378,73 @@ class Enemy : public MovableSprite
         {
         }
 
+        const bool& Escaped() { return escaped; }
+        
         private:
             Vec2i movSpeed;
             HealthBar* healthBar;
+            bool dead = false, escaped = false;
 };
 
 class EnemyHandler : public StaticSprite
 {
     public:
-        EnemyHandler(Level* lvl) : level(lvl)
+        EnemyHandler(Level* lvl) : StaticSprite(), level(lvl), stepSpeed(5.0f), currentNumEnemies(0), maxNumEnemies(30) 
         {
-            enemyTimer = new Timer({400, 50}, {0, 255, 0, 255}, 60.0f, 5);
+            enemyTimer = new Timer({400, 50}, {0, 255, 0, 255}, 10.0f, 5);
             level->AddSprite(enemyTimer);
             timeIntervalStep = enemyTimer->GetTimeCap();
         }
 
         void Tick()
-        {
+        {   
             if(enemyTimer->GetCurrentTime() <= timeIntervalStep)
             {
-                timeIntervalStep -= stepSpeed;
-                if(timeIntervalStep < (enemyTimer->GetTimeCap() / 6.0f))
-                    stepSpeed = 1.0f;
-                else if(timeIntervalStep < enemyTimer->GetTimeCap() / 2.0f)
-                    stepSpeed = 2.0f;
+                if(currentNumEnemies <= maxNumEnemies)
+                {    
+                    timeIntervalStep -= stepSpeed;
+                    if(timeIntervalStep <= (enemyTimer->GetTimeCap() / 6.0f))
+                        stepSpeed = 1.0f;
+                    else if(timeIntervalStep <= (enemyTimer->GetTimeCap() / 2.0f))
+                        stepSpeed = 2.0f;
 
-                int ry = gameEngine.GetRandomNumberInRange(100, 700);
-                Enemy* enemy = new Enemy({gameEngine.GetWindowSize().x, ry}, {150, 150}, "EnemySheet.png", {-1, 0}, 8);
-                enemy->SetTag("enemy");
-                SDL_Rect rect = enemy->GetDestRect();
-                SDL_Rect bounds = {rect.x + 50, rect.y + (rect.h / 2), 
-                                    50, rect.h / 2};
-                enemy->InstallCollider2D(bounds, false);
-                level->AddSprite(enemy);
+                    AddEnemy();
+                }
             }
-
+            
+            if((enemyTimer->GetCurrentTime() <= 0.0f) && (currentNumEnemies < maxNumEnemies))
+            {
+                for(int i = 0; i < maxNumEnemies - currentNumEnemies; i++)
+                {
+                    AddEnemy();
+                }
+            }
         }
 
+        void AddEnemy()
+        {
+            int ry = gameEngine.GetRandomNumberInRange(100, 700);
+            Enemy* enemy = new Enemy({gameEngine.GetWindowSize().x, ry}, {150, 150}, "EnemySheet.png", {-1, 0}, 8);
+            enemy->SetTag("enemy");
+            SDL_Rect rect = enemy->GetDestRect();
+            SDL_Rect bounds = {rect.x + 50, rect.y + (rect.h / 2), 
+                                50, rect.h / 2};
+            enemy->InstallCollider2D(bounds, false);
+            level->AddSprite(enemy);
+            currentNumEnemies++;
+        }
+
+        int GetMaxNumEnemies() { return maxNumEnemies; }
+        Timer* GetTimer() { return enemyTimer; }
     private:
         Level* level;
         Timer* enemyTimer;
         double timeIntervalStep;
-        double stepSpeed = 5.0f;
+        double stepSpeed;
+        int currentNumEnemies;
+        int maxNumEnemies;
+
+        
 };
 
 class PlayerNameInputField : public TextField
@@ -427,6 +470,76 @@ class PlayerNameInputField : public TextField
         std::string strLabel;
 };
 
+class PlayerStatsHandler : public StaticSprite
+{
+    public:
+        PlayerStatsHandler(Player* p1, Player* p2, EnemyHandler* eh) : StaticSprite(),
+                            player1(p1), player2(p2), enemyHandler(eh)
+        {
+        }
+
+        void Tick()
+        {                    
+            int totalPoints = player1->GetPoints() + player2->GetPoints();
+            int maxPoints = enemyHandler->GetMaxNumEnemies();
+         
+            if(enemyHandler->GetTimer()->GetCurrentTime() <= 0.0f)
+            {
+                if(totalPoints == maxPoints)
+                    gameEngine.LoadLevel(4);
+                
+                bool allEnemiesDead = true;
+                for(Sprite* e : gameEngine.GetCurrentLevel()->GetSprites())
+                {
+                    Enemy* enemy = dynamic_cast<Enemy*>(e);
+                    if(enemy)
+                    {
+                        if(!enemy->Escaped())
+                            allEnemiesDead = false;
+                    }
+                }
+
+                if(allEnemiesDead)
+                    gameEngine.LoadLevel(4);
+                
+            }
+            
+            if(gameEngine.GetCurrentLevelIndex() == 4)
+            {
+                if(!resultPresented)
+                {
+                    resultPresented = true;
+                    
+                    std::string strTotalPoints = "Total points: " + std::to_string(totalPoints) + " / " + std::to_string(maxPoints);
+                    std::string strEndMessage = "";
+                    SDL_Color color = {};
+                    if(totalPoints == maxPoints)
+                    {
+                        strEndMessage = "Congratulations, you won!";
+                        color = {100, 255, 100, 255};
+                    }
+                    else
+                    {
+                        strEndMessage = "You let the robots through, NOW WE DIE!!";
+                        color = {255, 100, 100, 255};
+                    }
+
+                    Vec2i p = {350, 350};                    
+                    TextFragment* tfTotalPoints = TextFragment::GetInstance(p, {0, 0}, strTotalPoints, color, 5);
+                    TextFragment* tfEndMessage = TextFragment::GetInstance({p.x, p.y + 50}, {0,0}, strEndMessage, color, 4);
+                    gameEngine.GetCurrentLevel()->AddSprite(tfTotalPoints);
+                    gameEngine.GetCurrentLevel()->AddSprite(tfEndMessage);
+
+                }
+            }
+        }
+
+    private:
+        Player* player1, *player2;
+        EnemyHandler* enemyHandler;
+        bool resultPresented = false;
+};
+
 int main(int argv, char **argc)
 {
     gameEngine.SetFps(60);
@@ -444,25 +557,24 @@ int main(int argv, char **argc)
     Level* levelStartGame = Level::GetInstance(1);
     Level* levelCredits = Level::GetInstance(2);
     Level* levelChooseName = Level::GetInstance(3);
+    Level* levelEndGame = Level::GetInstance(4);
 
     gameEngine.AddLevel(levelMainMenu);
     gameEngine.AddLevel(levelStartGame);
     gameEngine.AddLevel(levelCredits);
     gameEngine.AddLevel(levelChooseName);
+    gameEngine.AddLevel(levelEndGame);
     
  
     Sprite* mainMenuBkg = StaticSprite::GetInstance({0, 0}, {gameEngine.GetWindowSize().x, gameEngine.GetWindowSize().y}, "MainMenuBackground.png");
     
     TextFragment* text2 = TextFragment::GetInstance({100, 100}, {100, 100}, " ", {0, 255, 255, 255}, 2);
     TextFragment* text1 = TextFragment::GetInstance({100, 100}, {100, 100}, " ", {0, 255, 255, 255}, 2);
+
     TextFragment* credits1 = TextFragment::GetInstance({(gameEngine.GetWindowSize().x / 2) - 150, 150}, {100, 100}, "CREDITS", {255, 0, 0, 255}, 2);
     TextFragment* credits2 = TextFragment::GetInstance({(gameEngine.GetWindowSize().x / 2) - 170, 250}, {100, 100}, "A Game made by", {255, 0, 0, 255}, 3);
     TextFragment* credits3 = TextFragment::GetInstance({(gameEngine.GetWindowSize().x / 2) - 200, 350}, {100, 100}, "Carl-Johan Larson Eliasson", {255, 0, 0, 255}, 4);
-
-/*
-    TexField* tf = TextField::GetInstancee({450, 405}, {100, 255, 100, 255}, 6, 8);
-*/
-
+    
     TextFragment* tfScore1 = TextFragment::GetInstance({10, 10}, {0,0}, "Score: ", {100, 255, 255, 255}, 3);
     TextFragment* tfScore2 = TextFragment::GetInstance({10, 50}, {0,0}, "Score: ", {100, 255, 255, 255}, 3);
             
@@ -493,8 +605,11 @@ int main(int argv, char **argc)
     Button* _quitButton     = new UIButton({500, 650}, {200, 100}, "MenuButtons.png", {0, 1200}, {800, 1200}, {1600, 1200}, {800, 600}, QuitGame);
     Button* _backButton     = new UIButton({800, 650}, {200, 100}, "MenuButtons.png", {0, 1800}, {800, 1800}, {1600, 1800}, {800, 600}, Back);
     
-    EnemyHandler enemyHandler(levelStartGame);
-   
+    EnemyHandler* enemyHandler = new EnemyHandler(levelStartGame);
+
+    PlayerStatsHandler* playerStatsHandler = new PlayerStatsHandler(player1, player2, enemyHandler);
+
+    
     levelMainMenu->AddSprite(mainMenuBkg);
     levelMainMenu->AddSprite(_newGameButton);
     levelMainMenu->AddSprite(_creditsButton);
@@ -506,8 +621,9 @@ int main(int argv, char **argc)
     levelStartGame->AddSprite(text2);
     levelStartGame->AddSprite(tfScore1);
     levelStartGame->AddSprite(tfScore2);
-    levelStartGame->AddSprite(&enemyHandler);
-    
+    levelStartGame->AddSprite(enemyHandler);
+    levelStartGame->AddSprite(playerStatsHandler);
+
     levelCredits->AddSprite(_backButton);
     levelCredits->AddSprite(credits1);
     levelCredits->AddSprite(credits2);
@@ -522,6 +638,9 @@ int main(int argv, char **argc)
     levelChooseName->AddSprite(tf2);
     levelChooseName->AddSprite(_startButton);
     levelChooseName->AddSprite(_backButton);
+
+    levelEndGame->AddSprite(playerStatsHandler);
+    levelEndGame->AddSprite(_quitButton);
 
     gameEngine.Run();
 
