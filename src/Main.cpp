@@ -8,16 +8,19 @@
 
 #define FPS 60
 
-
+class Particle;
+class Player;
 class Explosion : public MovableSprite
 {
     public:
-        Explosion(Vec2i p, Vec2i sz, std::string srcImage) : MovableSprite(p, sz, srcImage)
+        Explosion(Vec2i p, Vec2i sz, std::string srcImage, Player* _owner) : MovableSprite(p, sz, srcImage), owner(_owner) 
         {
             velocity.x = gameEngine.GetRandomNumberInRange(-5, 8);
             velocity.y = gameEngine.GetRandomNumberInRange(-5, 5);
             lifeTime = gameEngine.GetRandomNumberInRange(5, 35);
         }
+
+        Player* GetOwner() { return owner; }
 
         void Tick()
         {
@@ -35,16 +38,19 @@ class Explosion : public MovableSprite
     private:
         int lifeTime = 20;
         Vec2i velocity;
+        Player* owner;
 };
 
 class Particle : public MovableSprite
 {
     public:
-        Particle(Vec2i p, Vec2i sz, std::string srcImage) : MovableSprite(p, sz, srcImage)
+        Particle(Vec2i p, Vec2i sz, std::string srcImage, Player* _owner) : MovableSprite(p, sz, srcImage), owner(_owner)
         {
             velocity.x = 13;//gameEngine.GetRandomNumberInRange(3, 8);
             velocity.y = gameEngine.GetRandomNumberInRange(-2, 2);
         }
+
+        Player* GetOwner() {return owner;}
 
         void Tick()
         {
@@ -52,7 +58,7 @@ class Particle : public MovableSprite
             {
                 for(int i = 0; i < 5; i ++)
                 {
-                    Explosion* p = new Explosion({GetDestRect().x, GetDestRect().y}, {16,16}, "Particle.png");
+                    Explosion* p = new Explosion({GetDestRect().x, GetDestRect().y}, {16,16}, "Particle.png", owner);
                     p->SetTag("explosion");
                     p->InstallCollider2D(p->GetDestRect(), false);
                     gameEngine.GetCurrentLevel()->AddSprite(p);
@@ -66,9 +72,16 @@ class Particle : public MovableSprite
                 Move(velocity);
             }
         }
+
+        void OnCollision2D(Sprite* other)
+        {
+            if(other->GetNameTag() == "enemy")
+                lifeTime = -1;
+        }
     private:
         int lifeTime = 40;
         Vec2i velocity;
+        Player* owner;
 };
 
 class HealthBar : public MovableSprite
@@ -128,29 +141,40 @@ class HealthBar : public MovableSprite
 class Player : public MovableSprite
 {
     public:
-        Player(Vec2i p, Vec2i sz, std::string srcImage, TextFragment* tfName, int health) : MovableSprite(p, sz, srcImage), 
-                name(tfName)
+        Player(Vec2i p, Vec2i sz, std::string srcImage, TextFragment* tfName, TextFragment* _tfScore, int health) : MovableSprite(p, sz, srcImage), 
+                name(tfName), tfScore(_tfScore)
         {
             healthBar = new HealthBar({p.x - 30, p.y - 30}, {100, 10}, "HealthBar.png", health); 
-            healthBar->SetColor({255, 0, 0, 255});
+            healthBar->SetColor({1, 255, 1, 255});
             gameEngine.GetLevelAtIndex(1)->AddSprite(healthBar);
+            name->SetPosition({healthBar->GetDestRect().x, healthBar->GetDestRect().y - name->GetDestRect().h});
+            
         }
+        
+        TextFragment* GetName() { return name; }
 
+        void IncreasePoints(int points) { iPoints += points; pointIncreased = true;}
+        void UpdatePoints()
+        {
+            tfScore->SetText(name->GetText() + " " + std::to_string(iPoints));
+            pointIncreased = false;
+        }
         void Tick()
         {
+            if(pointIncreased)
+            {
+                UpdatePoints();
+            }
+
             static int s = 3;
             if(gameEngine.GetKeyPressed(rightKey))
                 speed.x = s; 
-                
             if(gameEngine.GetKeyPressed(leftKey))
                 speed.x = -s;
-                
             if(gameEngine.GetKeyPressed(upKey))
                 speed.y = -s;
-                
             if(gameEngine.GetKeyPressed(downKey))
                 speed.y = s;
-
             if(speed.x != 0 || speed.y != 0)
             {
                 Move(speed);
@@ -158,13 +182,15 @@ class Player : public MovableSprite
                 healthBar->MoveBar(speed);
                 speed = {0,0};
             }
+            
             AnimateSprite({0, 0}, {32, 80}, 4, 5);
 
             if(gameEngine.GetKeyPressedOnce('p'))
             {
                 if(GetNameTag() == "player1")
                 {
-                    Particle* p = new Particle({GetDestRect().x, GetDestRect().y}, {32,16}, "BulletTest.png");
+                    SDL_Rect destRect = GetDestRect();
+                    Particle* p = new Particle({destRect.x + destRect.w, destRect.y + (destRect.h / 2)}, {32,16}, "BulletTest.png", this);
                     p->SetTag("particleShot");
                     SDL_Rect bounds = p->GetDestRect();
                     p->InstallCollider2D(bounds, false);
@@ -173,12 +199,12 @@ class Player : public MovableSprite
                 }
             }
 
-            
             if(gameEngine.GetKeyPressedOnce('b'))
             {
                 if(GetNameTag() == "player2")
                 {
-                    Particle* p = new Particle({GetDestRect().x, GetDestRect().y}, {32,16}, "BulletTest.png");
+                    SDL_Rect destRect = GetDestRect();
+                    Particle* p = new Particle({destRect.x + destRect.w, destRect.y + (destRect.h / 2)}, {32,16}, "BulletTest.png", this);
                     p->SetTag("particleShot");
                     SDL_Rect bounds = p->GetDestRect();
                     p->InstallCollider2D(bounds, false);
@@ -186,24 +212,23 @@ class Player : public MovableSprite
                     gameEngine.PlaySound("shot", 3);
                 }
             }
-
         }
 
         void SetMovementKeys(int l, int r, int u, int d) { leftKey = l; rightKey = r; upKey = u; downKey = d;}
 
         void OnCollision2D(Sprite* other)
         {
-            if(other->GetNameTag() == "player TWO")
-            {
-                std::cout << "Im: " << GetNameTag() << " getting hit by: " << other->GetNameTag() << "\n";
-            }
         }
     private:
         Vec2i speed = {};
         TextFragment* name;
+        TextFragment* tfScore;
         bool shooting = false;
         int leftKey, rightKey, upKey, downKey;
         HealthBar* healthBar;
+        
+        int iPoints = 0;
+        bool pointIncreased = true; // Just nu sätts den till true för att namnet ska uppdateras första gången genom loopen.s
         
 };
 
@@ -318,12 +343,17 @@ class Enemy : public MovableSprite
                 healthBar->ApplyDamage(1);
                 if(healthBar->GetCurrentHealth() <= 0)
                 {
+                    Particle* p = dynamic_cast<Particle*>(other);
+                    Explosion* e = dynamic_cast<Explosion*>(other);
+                    if(p)
+                        p->GetOwner()->IncreasePoints(1);
+                    else if(e)
+                        e->GetOwner()->IncreasePoints(1);
+
                     gameEngine.GetCurrentLevel()->RemoveSprite(this);
                     healthBar->DeleteBar();
                 }
-                    
             }
-                
         }
 
         ~Enemy()
@@ -355,11 +385,12 @@ class EnemyHandler : public StaticSprite
                 else if(timeIntervalStep < enemyTimer->GetTimeCap() / 2.0f)
                     stepSpeed = 2.0f;
 
-                int ry = gameEngine.GetRandomNumberInRange(150, 800);
-                Enemy* enemy = new Enemy({gameEngine.GetWindowSize().x, ry}, {150, 150}, "EnemySheet.png", {-1, 0}, 15);
+                int ry = gameEngine.GetRandomNumberInRange(100, 700);
+                Enemy* enemy = new Enemy({gameEngine.GetWindowSize().x, ry}, {150, 150}, "EnemySheet.png", {-1, 0}, 8);
+                enemy->SetTag("enemy");
                 SDL_Rect rect = enemy->GetDestRect();
-                SDL_Rect bounds = {rect.x + 30, rect.y + (rect.h / 2), 
-                                    60, rect.h / 2};
+                SDL_Rect bounds = {rect.x + 50, rect.y + (rect.h / 2), 
+                                    50, rect.h / 2};
                 enemy->InstallCollider2D(bounds, false);
                 level->AddSprite(enemy);
             }
@@ -373,10 +404,32 @@ class EnemyHandler : public StaticSprite
         double stepSpeed = 5.0f;
 };
 
+class PlayerNameInputField : public TextField
+{
+    public:
+        PlayerNameInputField(Vec2i p, Vec2i activationSize, SDL_Color c, int fontIndex, int maxInputLength, Player* _player, TextFragment* title) : TextField(p, activationSize, c, fontIndex, maxInputLength),
+                                player(_player), titleDescription(title), strLabel(titleDescription->GetText())
+        {
+            SDL_Rect dr = GetDestRect();
+            titleDescription->SetPosition({dr.x, dr.y - titleDescription->GetDestRect().h - 10});
+        }
+
+        void OnEnterExecute()
+        {
+            player->GetName()->SetText(GetCurrentTextInput());
+            titleDescription->SetText(strLabel + ": " + player->GetName()->GetText());
+            titleDescription->Blink();
+        }
+
+    private:
+        Player* player;
+        TextFragment* titleDescription;
+        std::string strLabel;
+};
+
 int main(int argv, char **argc)
 {
     gameEngine.SetFps(60);
-
     gameEngine.LoadSound("shot", "shot.wav");
     gameEngine.LoadSound("explosion", "explosion.wav");
     gameEngine.LoadSound("release", "release.wav");
@@ -400,28 +453,41 @@ int main(int argv, char **argc)
  
     Sprite* mainMenuBkg = StaticSprite::GetInstance({0, 0}, {gameEngine.GetWindowSize().x, gameEngine.GetWindowSize().y}, "MainMenuBackground.png");
     
-    TextFragment* text1 = TextFragment::GetInstance({100, 100}, {100, 100}, "player 1", {255, 0, 0, 255}, 0);
-    TextFragment* text2 = TextFragment::GetInstance({100, 100}, {100, 100}, "player 2", {255, 0, 0, 255}, 1);
+    TextFragment* text2 = TextFragment::GetInstance({100, 100}, {100, 100}, " ", {0, 255, 255, 255}, 2);
+    TextFragment* text1 = TextFragment::GetInstance({100, 100}, {100, 100}, " ", {0, 255, 255, 255}, 2);
     TextFragment* credits1 = TextFragment::GetInstance({(gameEngine.GetWindowSize().x / 2) - 150, 150}, {100, 100}, "CREDITS", {255, 0, 0, 255}, 2);
     TextFragment* credits2 = TextFragment::GetInstance({(gameEngine.GetWindowSize().x / 2) - 170, 250}, {100, 100}, "A Game made by", {255, 0, 0, 255}, 3);
     TextFragment* credits3 = TextFragment::GetInstance({(gameEngine.GetWindowSize().x / 2) - 200, 350}, {100, 100}, "Carl-Johan Larson Eliasson", {255, 0, 0, 255}, 4);
 
-    Player* player = new Player({100,100}, {50, 100}, "PersonIdle_Small.png", text1, 50);
-    player->SetTag("player1");
-    player->SetMovementKeys(SDLK_LEFT, SDLK_RIGHT, SDLK_UP, SDLK_DOWN);
-    player->InstallCollider2D({player->GetDestRect().x, player->GetDestRect().y + 3*(player->GetDestRect().h / 4),
-                                player->GetDestRect().w, player->GetDestRect().h / 4}, false);
+/*
+    TexField* tf = TextField::GetInstancee({450, 405}, {100, 255, 100, 255}, 6, 8);
+*/
+
+    TextFragment* tfScore1 = TextFragment::GetInstance({10, 10}, {0,0}, "Score: ", {100, 255, 255, 255}, 3);
+    TextFragment* tfScore2 = TextFragment::GetInstance({10, 50}, {0,0}, "Score: ", {100, 255, 255, 255}, 3);
+            
+    Player* player1 = new Player({100,100}, {50, 100}, "PersonIdle_Small.png", text1, tfScore1, 50);
+    player1->SetTag("player1");
+    player1->SetMovementKeys(SDLK_LEFT, SDLK_RIGHT, SDLK_UP, SDLK_DOWN);
+    player1->InstallCollider2D({player1->GetDestRect().x, player1->GetDestRect().y + 3*(player1->GetDestRect().h / 4),
+                                player1->GetDestRect().w, player1->GetDestRect().h / 4}, false);
 
 
-    Player* player2 = new Player({100,100}, {30, 80}, "PersonIdle_Small.png", text2, 30);
+    StaticSprite* textFieldBkg1 = StaticSprite::GetInstance({200, 400}, {385, 60}, "TextField.png");
+    TextFragment* fieldTitle1 = TextFragment::GetInstance({0,0}, {0,0}, "Player 1", {1, 255, 1, 255}, 3);
+    TextField* tf1 = new PlayerNameInputField({textFieldBkg1->GetDestRect().x, textFieldBkg1->GetDestRect().y + 5}, {385, 60}, {180, 255, 180, 255}, 6, 8, player1, fieldTitle1);
+    
+    Player* player2 = new Player({100,100}, {30, 80}, "PersonIdle_Small.png", text2, tfScore2, 30);
     player2->SetTag("player2");
     player2->SetMovementKeys('a', 'd', 'w', 's');
     player2->InstallCollider2D({player2->GetDestRect().x, player2->GetDestRect().y + 3*(player2->GetDestRect().h / 4),
                                 player2->GetDestRect().w, player2->GetDestRect().h / 4}, false);
 
-    TextField* tf1 = TextField::GetInstance({300, 405}, {100, 255, 100, 255}, 6);
-    StaticSprite* textFieldBkg = StaticSprite::GetInstance({300, 400}, {700, 60}, "TextField.png");
-    Button* _newGameButton    = new UIButton({500, 350}, {200, 100}, "MenuButtons.png", {0, 0},    {800, 0},    {1600, 0},    {800, 600}, LoadChooseName);
+    StaticSprite* textFieldBkg2 = StaticSprite::GetInstance({600, 400}, {385, 60}, "TextField.png");
+    TextFragment* fieldTitle2 = TextFragment::GetInstance({0,0}, {0,0}, "Player 2", {1, 255, 1, 255}, 3);
+    TextField* tf2 = new PlayerNameInputField({textFieldBkg2->GetDestRect().x, textFieldBkg2->GetDestRect().y + 5}, {385, 60}, {180, 255, 180, 255}, 6, 8, player2, fieldTitle2);
+   
+    Button* _newGameButton  = new UIButton({500, 350}, {200, 100}, "MenuButtons.png", {0, 0},    {800, 0},    {1600, 0},    {800, 600}, LoadChooseName);
     Button* _startButton    = new UIButton({200, 650}, {200, 100}, "MenuButtons.png", {0, 0},    {800, 0},    {1600, 0},    {800, 600}, LoadStarGame);
     Button* _creditsButton  = new UIButton({500, 500}, {200, 100}, "MenuButtons.png", {0, 600},  {800, 600},  {1600, 600},  {800, 600}, LoadCredits);
     Button* _quitButton     = new UIButton({500, 650}, {200, 100}, "MenuButtons.png", {0, 1200}, {800, 1200}, {1600, 1200}, {800, 600}, QuitGame);
@@ -434,20 +500,26 @@ int main(int argv, char **argc)
     levelMainMenu->AddSprite(_creditsButton);
     levelMainMenu->AddSprite(_quitButton);
 
-    levelStartGame->AddSprite(player);
+    levelStartGame->AddSprite(player1);
     levelStartGame->AddSprite(player2);
     levelStartGame->AddSprite(text1);
     levelStartGame->AddSprite(text2);
+    levelStartGame->AddSprite(tfScore1);
+    levelStartGame->AddSprite(tfScore2);
     levelStartGame->AddSprite(&enemyHandler);
     
     levelCredits->AddSprite(_backButton);
     levelCredits->AddSprite(credits1);
     levelCredits->AddSprite(credits2);
     levelCredits->AddSprite(credits3);
-    
+
     levelChooseName->AddSprite(mainMenuBkg);
-    levelChooseName->AddSprite(textFieldBkg);
+    levelChooseName->AddSprite(textFieldBkg1);
+    levelChooseName->AddSprite(textFieldBkg2);
+    levelChooseName->AddSprite(fieldTitle1);
+    levelChooseName->AddSprite(fieldTitle2);
     levelChooseName->AddSprite(tf1);
+    levelChooseName->AddSprite(tf2);
     levelChooseName->AddSprite(_startButton);
     levelChooseName->AddSprite(_backButton);
 

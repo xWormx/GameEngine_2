@@ -435,7 +435,7 @@ void GameEngine::HandleMouseUpEvents(const SDL_Event& event)
 
 void GameEngine::CreateWindowAndRenderer(int width, int height)
 {
-    window = SDL_CreateWindow("CJ_GameEngine", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, width, height, 0);
+    window = SDL_CreateWindow("CJ_GameEngine", SDL_WINDOWPOS_CENTERED, 100, width, height, 0);
     if(!window)
     {
         std::string errMsg = SDL_GetError();

@@ -5,7 +5,8 @@ TextFragment* TextFragment::GetInstance(Vec2i pos, Vec2i sz, std::string txt, SD
     return new TextFragment(pos, sz, txt, col, fontIndex);
 }
 
-TextFragment::TextFragment(Vec2i pos, Vec2i sz, std::string txt, SDL_Color col, int fontIndex) : MovableSprite(), textFragDestRect{pos.x, pos.y, sz.x, sz.y}, color(col)
+TextFragment::TextFragment(Vec2i pos, Vec2i sz, std::string txt, SDL_Color col, int fontIndex) : MovableSprite(), 
+textFragDestRect{pos.x, pos.y, sz.x, sz.y}, color(col), textFontIndex(fontIndex), strText(txt)
 {
     SDL_Surface* surface = TTF_RenderText_Solid(gameEngine.GetFont(fontIndex), txt.c_str(), color);
     
@@ -35,19 +36,50 @@ void TextFragment::Draw() const
 
 void TextFragment::Tick()
 {
-    
+    if(blinkActivated)
+        StartBlinking();
 }
 
-int num = 0;
-void TextFragment::OnKeyDown(const SDL_Event& e)
+void TextFragment::Blink()
 {
-    std::string number = "num = " + std::to_string(num++);
-    //SetText(number);
+    blinkActivated = true;
+    blinkOn = true;
+}
+
+void TextFragment::StartBlinking()
+{
+    if(numberOfBlinks < 10)
+    {
+        if(blinkStep++ % 3 == 0)
+        {
+            if(blinkOn)
+            {
+                color = {255,255,255,255};
+                blinkOn = false;
+            }
+            else
+            {
+                color = {0,255,0,255};
+                blinkOn = true;
+            }
+            numberOfBlinks++;
+        }
+    }
+    else
+    {
+        blinkActivated = false;
+        blinkOn = false;
+        color = {0,255,0,255};
+        numberOfBlinks = 0;                
+    }
+
+    SetText(strText);
 }
 
 void TextFragment::SetText(std::string txt)
 {
-    SDL_Surface* surface = TTF_RenderText_Solid(gameEngine.GetFont(), txt.c_str(), color);
+    strText = txt;
+    SDL_Surface* surface = TTF_RenderText_Solid(gameEngine.GetFont(textFontIndex), txt.c_str(), color);
     
     if(textTexture)
         SDL_DestroyTexture(textTexture);
