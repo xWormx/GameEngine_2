@@ -57,7 +57,7 @@ bool InputComponent::GetSingleKeyState(const Sint32 keyCode) const
 
 void InputComponent::SetKeyCodePressed(const Sint32 keyCode)
 {
-    if(keyCode > 255)
+    if(keyCode > 128)
     {
         keyStatesLarge[keyCode] = true;
         return;
@@ -98,7 +98,7 @@ void InputComponent::SetKeyCodePressed(const Sint32 keyCode)
 
 void InputComponent::SetKeyCodeReleased(const Sint32 keyCode)
 {
-    if(keyCode > 255)
+    if(keyCode > 128)
     {
         keyStatesLarge[keyCode] = false;
         return;
@@ -118,7 +118,7 @@ void InputComponent::SetKeyCodeReleased(const Sint32 keyCode)
 
 bool InputComponent::GetKeyPressed(const Sint32 keyCode) const
 {
-    if(keyCode > 255)
+    if(keyCode > 128)
     {
         auto it = keyStatesLarge.find(keyCode);
         return it != keyStatesLarge.end() && it->second;

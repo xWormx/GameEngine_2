@@ -28,6 +28,10 @@ class Sprite
         bool HasCollider2D();
         virtual void OnCollision2D(Sprite* other){}
         void SetTag(std::string tag) { nameTag = tag; }
+
+
+        Sprite(const Sprite&) = delete;
+        const Sprite& operator=(const Sprite&) = delete;
     protected:
         Sprite() {}
         Sprite(Vec2i pos, Vec2i size);

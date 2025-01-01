@@ -1,7 +1,7 @@
 #include "GameEngine.h"
 
 // Sätt till 0 om colliderbounds inte ska ritas ut
-#define DEBUGDRAW 1
+#define DEBUGDRAW 0
 
 extern GameEngine gameEngine(1280, 920);
 

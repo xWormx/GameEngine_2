@@ -251,15 +251,20 @@ class Timer : public TextFragment
                 started = true;
             }
 
-            if(fCurrentTime > 0.0f)
+            if(fCurrentTime >= 0.0f)
+            {
                 fCurrentTime = fTimeCap - (gameEngine.GetTimeElapsed() - fOriginTime);
-            else
-                fCurrentTime = 0.0f;
-            char str[10] = {};
-            char time[64] = "Time: ";
-            sprintf(str, "%0.2f", fCurrentTime);
-            strcat(time, str);
-            SetText(time);
+                if(fCurrentTime < 0.0f)
+                    fCurrentTime = 0.0f;    
+                
+                char str[10] = {};
+                char time[64] = "Time: ";
+                sprintf(str, "%0.2f", fCurrentTime);
+                strcat(time, str);
+                SetText(time);
+            }
+
+
         }
 
         const double& GetCurrentTime() { return fCurrentTime; }
@@ -391,7 +396,7 @@ class EnemyHandler : public StaticSprite
     public:
         EnemyHandler(Level* lvl) : StaticSprite(), level(lvl), stepSpeed(5.0f), currentNumEnemies(0), maxNumEnemies(30) 
         {
-            enemyTimer = new Timer({400, 50}, {0, 255, 0, 255}, 10.0f, 5);
+            enemyTimer = new Timer({400, 50}, {0, 255, 0, 255}, 20.0f, 5);
             level->AddSprite(enemyTimer);
             timeIntervalStep = enemyTimer->GetTimeCap();
         }
@@ -424,7 +429,7 @@ class EnemyHandler : public StaticSprite
         void AddEnemy()
         {
             int ry = gameEngine.GetRandomNumberInRange(100, 700);
-            Enemy* enemy = new Enemy({gameEngine.GetWindowSize().x, ry}, {150, 150}, "EnemySheet.png", {-1, 0}, 8);
+            Enemy* enemy = new Enemy({gameEngine.GetWindowSize().x, ry}, {150, 150}, "EnemySheet.png", {-1, 0}, 12);
             enemy->SetTag("enemy");
             SDL_Rect rect = enemy->GetDestRect();
             SDL_Rect bounds = {rect.x + 50, rect.y + (rect.h / 2), 
@@ -606,7 +611,7 @@ int main(int argv, char **argc)
     Button* _backButton     = new UIButton({800, 650}, {200, 100}, "MenuButtons.png", {0, 1800}, {800, 1800}, {1600, 1800}, {800, 600}, Back);
     
     EnemyHandler* enemyHandler = new EnemyHandler(levelStartGame);
-
+    
     PlayerStatsHandler* playerStatsHandler = new PlayerStatsHandler(player1, player2, enemyHandler);
 
     
