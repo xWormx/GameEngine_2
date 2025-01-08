@@ -1,7 +1,7 @@
 #ifndef SPRITE_H
 #define SPRITE_H
 
-#include "GameEngine.h"
+
 #include "SDL2\SDL_image.h"
 #include "Vec2i.h"
 #include <string>

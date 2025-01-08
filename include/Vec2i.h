@@ -7,6 +7,8 @@ struct Vec2i
     int x;
     int y;
 
+    Vec2i() : x(0), y(0){}
+    Vec2i(int _x, int _y) : x(_x), y(_y){}
 
     Vec2i operator+(Vec2i other)
     {

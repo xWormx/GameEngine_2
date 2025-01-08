@@ -15,7 +15,14 @@
 #include <random>
 #include "Vec2i.h"
 #include "Level.h"
+#include "Sprite.h"
+#include "StaticSprite.h"
+#include "MovableSprite.h"
+#include "TextFragment.h"
+#include "TextField.h"
+#include "Button.h"
 #include "InputComponent.h"
+
 
 class Level;
 class Sprite;
@@ -83,7 +90,10 @@ class GameEngine
             catch(const std::exception& e)
             {
                 std::cerr << e.what() << '\n';
+                return nullptr;
             }
+
+            return nullptr;
         }
 
         ~GameEngine();

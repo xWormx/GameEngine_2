@@ -86,7 +86,7 @@ int MovableSprite::AnimateSprite(Vec2i frameStart, Vec2i frameSize, unsigned int
             animationFrame = 0;
         }
 
-        Vec2i p = {(frameStart.x * frameSize.x) + (animationFrame * frameSize.x), 0};
+        Vec2i p = {(frameStart.x * frameSize.x) + ((int)animationFrame * frameSize.x), 0};
         Vec2i sz = {frameSize.x, frameSize.y};
         SetSpriteRegion(p, sz);
         animationFrame++;

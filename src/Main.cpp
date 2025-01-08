@@ -1,239 +1,9 @@
 #include "GameEngine.h"
-#include "StaticSprite.h"
-#include "MovableSprite.h"
-#include "Level.h"
-#include "TextFragment.h"
-#include "TextField.h"
-#include "Button.h"
+#include "Player.h"
+#include "Explosion.h"
+#include "HealthBar.h"
 
 #define FPS 60
-
-class Particle;
-class Player;
-class Explosion : public MovableSprite
-{
-    public:
-        Explosion(Vec2i p, Vec2i sz, std::string srcImage, Player* _owner) : MovableSprite(p, sz, srcImage), owner(_owner) 
-        {
-            velocity.x = gameEngine.GetRandomNumberInRange(-5, 8);
-            velocity.y = gameEngine.GetRandomNumberInRange(-5, 5);
-            lifeTime = gameEngine.GetRandomNumberInRange(5, 35);
-        }
-
-        Player* GetOwner() { return owner; }
-
-        void Tick()
-        {
-            if(lifeTime-- < 0)
-            {
-                gameEngine.PlaySound("explosion", 10);
-                gameEngine.GetCurrentLevel()->RemoveSprite(this);
-            }
-                
-            else
-            {
-                Move(velocity);
-            }
-        }
-    private:
-        int lifeTime = 20;
-        Vec2i velocity;
-        Player* owner;
-};
-
-class Particle : public MovableSprite
-{
-    public:
-        Particle(Vec2i p, Vec2i sz, std::string srcImage, Player* _owner) : MovableSprite(p, sz, srcImage), owner(_owner)
-        {
-            velocity.x = 13;//gameEngine.GetRandomNumberInRange(3, 8);
-            velocity.y = gameEngine.GetRandomNumberInRange(-2, 2);
-        }
-
-        Player* GetOwner() {return owner;}
-
-        void Tick()
-        {
-            if(lifeTime-- < 0)
-            {
-                for(int i = 0; i < 5; i ++)
-                {
-                    Explosion* p = new Explosion({GetDestRect().x, GetDestRect().y}, {16,16}, "Particle.png", owner);
-                    p->SetTag("explosion");
-                    p->InstallCollider2D(p->GetDestRect(), false);
-                    gameEngine.GetCurrentLevel()->AddSprite(p);
-                    gameEngine.PlaySound("release", 1);
-                }
-                gameEngine.GetCurrentLevel()->RemoveSprite(this);
-            }
-                
-            else
-            {
-                Move(velocity);
-            }
-        }
-
-        void OnCollision2D(Sprite* other)
-        {
-            if(other->GetNameTag() == "enemy")
-                lifeTime = -1;
-        }
-    private:
-        int lifeTime = 40;
-        Vec2i velocity;
-        Player* owner;
-};
-
-class HealthBar : public MovableSprite
-{
-    public:
-        HealthBar(Vec2i p, Vec2i sz, std::string srcImage, int maxHP) : MovableSprite(p, sz, srcImage),
-                    maxHealth(maxHP), currentHealth(maxHP)
-        {
-            background = MovableSprite::GetInstance(p, sz, srcImage);
-            gameEngine.GetLevelAtIndex(1)->AddSprite(background);
-        }
-
-        void ApplyDamage(int damageAmount) 
-        { 
-            currentHealth -= damageAmount; 
-            if(currentHealth < 0)
-                currentHealth = 0;
-            
-            double percentageToAdjust = (double)currentHealth / (double)maxHealth;
-            // Multiplicera med background för att den inte ändras.
-            double adjustWidth = (double)background->GetDestRect().w * percentageToAdjust;
-            SetSize({(int)adjustWidth, background->GetDestRect().h});
-            
-        }
-
-        void ApplyHealing(int healingAmount) 
-        { 
-            if(currentHealth < maxHealth)
-                currentHealth += healingAmount; 
-            if(currentHealth > maxHealth)
-                currentHealth = maxHealth;
-        }
-
-        void MoveBar(Vec2i speed)
-        {
-            Move(speed);
-            background->Move(speed);
-        }
-
-        void DeleteBar()
-        {
-            gameEngine.GetCurrentLevel()->RemoveSprite(background);
-            gameEngine.GetCurrentLevel()->RemoveSprite(this);
-        }
-
-        int GetCurrentHealth() { return currentHealth; }
-
-        ~HealthBar()
-        {           
-        }
-
-    private:
-        int maxHealth, currentHealth;
-        MovableSprite* background;
-};
-
-class Player : public MovableSprite
-{
-    public:
-        Player(Vec2i p, Vec2i sz, std::string srcImage, TextFragment* tfName, TextFragment* _tfScore, int health) : MovableSprite(p, sz, srcImage), 
-                name(tfName), tfScore(_tfScore)
-        {
-            healthBar = new HealthBar({p.x - 30, p.y - 30}, {100, 10}, "HealthBar.png", health); 
-            healthBar->SetColor({1, 255, 1, 255});
-            gameEngine.GetLevelAtIndex(1)->AddSprite(healthBar);
-            name->SetPosition({healthBar->GetDestRect().x, healthBar->GetDestRect().y - name->GetDestRect().h});
-            
-        }
-        
-        TextFragment* GetName() { return name; }
-        int GetPoints() { return iPoints; }
-
-        void IncreasePoints(int points) { iPoints += points; pointIncreased = true;}
-        void UpdatePoints()
-        {
-            tfScore->SetText(name->GetText() + " " + std::to_string(iPoints));
-            pointIncreased = false;
-        }
-        void Tick()
-        {
-            if(pointIncreased)
-            {
-                UpdatePoints();
-            }
-
-            static int s = 3;
-            if(gameEngine.GetKeyPressed(rightKey))
-                speed.x = s; 
-            if(gameEngine.GetKeyPressed(leftKey))
-                speed.x = -s;
-            if(gameEngine.GetKeyPressed(upKey))
-                speed.y = -s;
-            if(gameEngine.GetKeyPressed(downKey))
-                speed.y = s;
-            if(speed.x != 0 || speed.y != 0)
-            {
-                Move(speed);
-                name->Move(speed);
-                healthBar->MoveBar(speed);
-                speed = {0,0};
-            }
-            
-            AnimateSprite({0, 0}, {32, 80}, 4, 5);
-
-            if(gameEngine.GetKeyPressedOnce('p'))
-            {
-                if(GetNameTag() == "player1")
-                {
-                    SDL_Rect destRect = GetDestRect();
-                    Particle* p = new Particle({destRect.x + destRect.w, destRect.y + (destRect.h / 2)}, {32,16}, "BulletTest.png", this);
-                    p->SetTag("particleShot");
-                    SDL_Rect bounds = p->GetDestRect();
-                    p->InstallCollider2D(bounds, false);
-                    gameEngine.GetCurrentLevel()->AddSprite(p);
-                    gameEngine.PlaySound("shot", 3);
-                }
-            }
-
-            if(gameEngine.GetKeyPressedOnce('b'))
-            {
-                if(GetNameTag() == "player2")
-                {
-                    SDL_Rect destRect = GetDestRect();
-                    Particle* p = new Particle({destRect.x + destRect.w, destRect.y + (destRect.h / 2)}, {32,16}, "BulletTest.png", this);
-                    p->SetTag("particleShot");
-                    SDL_Rect bounds = p->GetDestRect();
-                    p->InstallCollider2D(bounds, false);
-                    gameEngine.GetCurrentLevel()->AddSprite(p);
-                    gameEngine.PlaySound("shot", 3);
-                }
-            }
-        }
-
-        void SetMovementKeys(int l, int r, int u, int d) { leftKey = l; rightKey = r; upKey = u; downKey = d;}
-
-        void OnCollision2D(Sprite* other)
-        {
-
-        }
-
-    private:
-        Vec2i speed = {};
-        TextFragment* name;
-        TextFragment* tfScore;
-        bool shooting = false;
-        int leftKey, rightKey, upKey, downKey;
-        HealthBar* healthBar;
-        
-        int iPoints = 0;
-        bool pointIncreased = true; // Just nu sätts den till true för att namnet ska uppdateras första gången genom loopen.s
-        
-};
 
 class Timer : public TextFragment
 {
@@ -350,14 +120,14 @@ class Enemy : public MovableSprite
 
         void OnCollision2D(Sprite* other)
         {
-            if(other->GetNameTag() == "particleShot" || other->GetNameTag() == "explosion")
+            if(other->GetNameTag() == "BulletShot" || other->GetNameTag() == "explosion")
             {
                 gameEngine.GetCurrentLevel()->RemoveSprite(other);
                 healthBar->ApplyDamage(1);
 
                 if(healthBar->GetCurrentHealth() <= 0)
                 {
-                    Particle* p = dynamic_cast<Particle*>(other);
+                    Bullet* p = dynamic_cast<Bullet*>(other);
                     Explosion* e = dynamic_cast<Explosion*>(other);
 
                     // dead är till för att en död fiende inte ger poäng mer än 1 gång när den dör
@@ -582,13 +352,19 @@ int main(int argv, char **argc)
     
     TextFragment* tfScore1 = TextFragment::GetInstance({10, 10}, {0,0}, "Score: ", {100, 255, 255, 255}, 3);
     TextFragment* tfScore2 = TextFragment::GetInstance({10, 50}, {0,0}, "Score: ", {100, 255, 255, 255}, 3);
-            
+    
+
     Player* player1 = new Player({100,100}, {50, 100}, "PersonIdle_Small.png", text1, tfScore1, 50);
     player1->SetTag("player1");
     player1->SetMovementKeys(SDLK_LEFT, SDLK_RIGHT, SDLK_UP, SDLK_DOWN);
     player1->InstallCollider2D({player1->GetDestRect().x, player1->GetDestRect().y + 3*(player1->GetDestRect().h / 4),
                                 player1->GetDestRect().w, player1->GetDestRect().h / 4}, false);
 
+    Vec2i playerP = {player1->GetDestRect().x, player1->GetDestRect().y + 20};
+    Weapon* rocketLauncher = new Weapon({playerP.x, playerP.y + 20}, {64, 32}, "Weapons.png", player1);
+    rocketLauncher->SetSpriteRegion({0,0}, {64, 32});
+    gameEngine.GetLevelAtIndex(1)->AddSprite(rocketLauncher);
+    player1->SetCurrentWeapon(rocketLauncher);
 
     StaticSprite* textFieldBkg1 = StaticSprite::GetInstance({200, 400}, {385, 60}, "TextField.png");
     TextFragment* fieldTitle1 = TextFragment::GetInstance({0,0}, {0,0}, "Player 1", {1, 255, 1, 255}, 3);

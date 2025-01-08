@@ -40,7 +40,8 @@ void TextField::Tick()
     {       
         if(gameEngine.GetTextInputRecieved())
         {
-            if(currentText.size() <= maxTextInputLength)
+            size_t maxLength = maxTextInputLength;
+            if(currentText.size() <= maxLength)
             {
                 if(currentText == " ")
                     currentText.pop_back();

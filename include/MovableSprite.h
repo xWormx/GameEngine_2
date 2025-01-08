@@ -12,6 +12,7 @@ class MovableSprite : public Sprite
         void Print() { std::cout << "FROM MOV SPRITE\n"; }
         const virtual SDL_Rect& GetDestRect() {return movableDestRect; }
         const virtual SDL_Rect& GetSrcRect() {return movableSrcRect; }
+        const Vec2i GetPosition() { return Vec2i(GetDestRect().x, GetDestRect().y); }
         void SetSpriteRegion(Vec2i p, Vec2i sz);
         void AdjustSize(Vec2i s);
         void SetColor(SDL_Color c);
